@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+    <panel>
+        <div class="panel-title"></div>
+        <div class="panel-body">
+            <table>
+                <tr>
+                    <th>name</th>
+                </tr>
+                {% for db in object_list  %}
+                    <tr>
+                        <td><a href="{% url 'database_index' db.name %}">{{db.name}}</a></td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </panel>
+{% endblock %}

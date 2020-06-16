@@ -1,0 +1,54 @@
+GET http://localhost:8000/db/abc/ddd
+Accept: application/json
+Authorization: Basic YWRtaW46MTIzNDU2
+
+###
+POST http://localhost:8000/db/abc/ddd
+Accept: application/json
+Authorization: Basic YWRtaW46MTIzNDU2
+Content-Type: application/json
+
+{
+  "id": 1,
+"name": "test"
+}
+
+###
+POST http://localhost:8000/db/abc/ddd
+Accept: application/json
+Authorization: Basic YWRtaW46MTIzNDU2
+Content-Type: application/json
+
+{
+  "id": "1",
+"name": "test2"
+}
+
+###
+POST http://localhost:8000/db/abc/ddd
+Accept: application/json
+Authorization: Basic YWRtaW46MTIzNDU2
+Content-Type: application/json
+
+{
+"name": "test3"
+}
+
+###
+POST http://localhost:8000/db/abc/ddd
+Accept: application/json
+Authorization: Basic YWRtaW46MTIzNDU2
+Content-Type: application/json
+
+{
+  "id":"5ee8d405f9a9aaad99ecbae0",
+"name": "test4"
+}
+
+###
+GET http://localhost:8000/db/abc/ddd/1
+Accept: application/json
+Authorization: Basic YWRtaW46MTIzNDU2
+Content-Type: application/json
+
+###
