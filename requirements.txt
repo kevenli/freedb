@@ -1,4 +1,4 @@
 django
-djongo
-mongoengine
+pymongo
 djangorestframework
+django-cors-headers
