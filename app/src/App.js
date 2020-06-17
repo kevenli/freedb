@@ -7,6 +7,7 @@ import './App.css';
 import AddDb from "./components/add-db.component";
 import DbDetail from "./components/db.component";
 import DbList from "./components/db-list.compoenet";
+import AddCollection from "./components/add_collection.component";
 
 class App extends Component{
   render() {
@@ -35,7 +36,8 @@ class App extends Component{
             <Switch>
               <Route exact path={["/", "/databases"]} component={DbList} />
               <Route exact path="/add_database" component={AddDb} />
-              <Route path="/database/:id" component={DbDetail} />
+              <Route exact path="/databases/:id" component={DbDetail} />
+              <Route exact path="/databases/:db_name/add_collection" component={AddCollection} />
             </Switch>
           </div>
         </div>

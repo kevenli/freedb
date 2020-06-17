@@ -40,6 +40,33 @@ class DatabaseList(APIView):
         return JsonResponse({"name": db_name})
 
 
+class DatabaseInstance(APIView):
+    def delete(self, request, db_name):
+        database = Database.objects.get(owner=request.user, name=db_name)
+        database.delete()
+        return JsonResponse({})
+
+    def get(self, request, db_name):
+        database = Database.objects.get(owner=request.user, name=db_name)
+        collections = Collection.objects.filter(database=database)
+
+        return JsonResponse({
+            "name": database.name,
+            'collections': [
+                {"name": x.name} for x in collections
+            ]
+        })
+
+
+class DatabaseCollectionList(APIView):
+    def post(self, request, db_name):
+        database = Database.objects.get(owner=request.user, name=db_name)
+        collection_name = self.request.data.get('name')
+        collection = Collection(database=database, name=collection_name)
+        collection.save()
+        return JsonResponse({})
+
+
 class DatabaseIndex(ListView):
     model = Collection
     template_name = 'freedb/database_index.html'

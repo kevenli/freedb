@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import {Redirect} from 'react-router-dom';
 import FreedbDataService from "../services/freedb.service";
 
 export default class AddDb extends Component {
@@ -15,7 +16,8 @@ export default class AddDb extends Component {
       description: "",
       published: false,
 
-      submitted: false
+      submitted: false,
+      redirectToList: false
     };
   }
 
@@ -41,6 +43,7 @@ export default class AddDb extends Component {
         this.setState({
           name: response.data.name,
         });
+        this.setState({redirectToList: true});
         console.log(response.data);
       })
       .catch(e => {
@@ -60,6 +63,9 @@ export default class AddDb extends Component {
   }
 
   render() {
+    if (this.state.redirectToList){
+      return <Redirect to='/databases' />
+    }
     return (
       <div className="submit-form">
         {this.state.submitted ? (

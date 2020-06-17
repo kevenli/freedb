@@ -1,5 +1,7 @@
 import React, { Component } from "react";
-import TutorialDataService from "../services/freedb.service";
+import FreedbDataService from "../services/freedb.service";
+import Breadcrumb from 'react-bootstrap/Breadcrumb';
+import { Link } from "react-router-dom";
 
 export default class Tutorial extends Component {
   constructor(props) {
@@ -12,18 +14,19 @@ export default class Tutorial extends Component {
     this.deleteTutorial = this.deleteTutorial.bind(this);
 
     this.state = {
-      currentTutorial: {
-        id: null,
-        title: "",
-        description: "",
-        published: false
+      currentDatabase: {
+        name: "",
+        collections: []
       },
-      message: ""
+      collections: [],
+      message: "",
+      db_name:"",
     };
   }
 
   componentDidMount() {
     this.getTutorial(this.props.match.params.id);
+    this.setState({db_name: this.props.match.params.id});
   }
 
   onChangeTitle(e) {
@@ -31,7 +34,7 @@ export default class Tutorial extends Component {
 
     this.setState(function(prevState) {
       return {
-        currentTutorial: {
+        currentDatabase: {
           ...prevState.currentTutorial,
           title: title
         }
@@ -43,7 +46,7 @@ export default class Tutorial extends Component {
     const description = e.target.value;
 
     this.setState(prevState => ({
-      currentTutorial: {
+      currentDatabase: {
         ...prevState.currentTutorial,
         description: description
       }
@@ -51,10 +54,11 @@ export default class Tutorial extends Component {
   }
 
   getTutorial(id) {
-    TutorialDataService.get(id)
+    FreedbDataService.getDb(id)
       .then(response => {
         this.setState({
-          currentTutorial: response.data
+          currentDatabase: response.data,
+          collections: response.data.collections
         });
         console.log(response.data);
       })
@@ -71,10 +75,10 @@ export default class Tutorial extends Component {
       published: status
     };
 
-    TutorialDataService.update(this.state.currentTutorial.id, data)
+    FreedbDataService.update(this.state.currentTutorial.id, data)
       .then(response => {
         this.setState(prevState => ({
-          currentTutorial: {
+          currentDatabase: {
             ...prevState.currentTutorial,
             published: status
           }
@@ -87,7 +91,7 @@ export default class Tutorial extends Component {
   }
 
   updateTutorial() {
-    TutorialDataService.update(
+    FreedbDataService.update(
       this.state.currentTutorial.id,
       this.state.currentTutorial
     )
@@ -103,7 +107,7 @@ export default class Tutorial extends Component {
   }
 
   deleteTutorial() {
-    TutorialDataService.delete(this.state.currentTutorial.id)
+    FreedbDataService.delete(this.state.currentTutorial.id)
       .then(response => {
         console.log(response.data);
         this.props.history.push('/tutorials')
@@ -113,82 +117,38 @@ export default class Tutorial extends Component {
       });
   }
 
-render() {
-    const { currentTutorial } = this.state;
+  render() {
+    const { currentDatabase, collections } = this.state;
 
     return (
       <div>
-        {currentTutorial ? (
-          <div className="edit-form">
-            <h4>Tutorial</h4>
-            <form>
-              <div className="form-group">
-                <label htmlFor="title">Title</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="title"
-                  value={currentTutorial.title}
-                  onChange={this.onChangeTitle}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="description">Description</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="description"
-                  value={currentTutorial.description}
-                  onChange={this.onChangeDescription}
-                />
-              </div>
-
-              <div className="form-group">
-                <label>
-                  <strong>Status:</strong>
-                </label>
-                {currentTutorial.published ? "Published" : "Pending"}
-              </div>
-            </form>
-
-            {currentTutorial.published ? (
-              <button
-                className="badge badge-primary mr-2"
-                onClick={() => this.updatePublished(false)}
-              >
-                UnPublish
-              </button>
-            ) : (
-              <button
-                className="badge badge-primary mr-2"
-                onClick={() => this.updatePublished(true)}
-              >
-                Publish
-              </button>
-            )}
-
-            <button
-              className="badge badge-danger mr-2"
-              onClick={this.deleteTutorial}
-            >
-              Delete
-            </button>
-
-            <button
-              type="submit"
-              className="badge badge-success"
-              onClick={this.updateTutorial}
-            >
-              Update
-            </button>
-            <p>{this.state.message}</p>
-          </div>
-        ) : (
-          <div>
-            <br />
-            <p>Please click on a Tutorial...</p>
-          </div>
-        )}
+        <Breadcrumb>
+          <Breadcrumb.Item href="#">Home</Breadcrumb.Item>
+          <Breadcrumb.Item href="https://getbootstrap.com/docs/4.0/components/breadcrumb/">
+            Library
+          </Breadcrumb.Item>
+          <Breadcrumb.Item active>Data</Breadcrumb.Item>
+        </Breadcrumb>
+        <div>
+          <Link to={`/databases/${this.state.db_name}/add_collection`} >Add Collection</Link>
+          <table>
+            <tr>
+              <td>name</td>
+              <td></td>
+            </tr>
+            {collections &&
+            collections.map((collection, index)=>(
+              <tr>
+                <td>
+                  <Link to={`/databases/${this.state.currentDatabase.name}/collections/${collection.name}`}>
+                  {collection.name}
+                  </Link>
+                </td>
+                <td></td>
+              </tr>
+            ))}
+          </table>
+        </div>
       </div>
     );
   }

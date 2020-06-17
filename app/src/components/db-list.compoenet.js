@@ -84,6 +84,16 @@ export default class TutorialsList extends Component {
       });
   }
 
+  deleteDb(db){
+    TutorialDataService.deleteDb(db.name)
+      .then(response =>{
+        this.refreshList();
+      })
+      .catch(e =>{
+        console.log(e);
+      });
+  }
+
   render() {
     const { searchTitle, databases, currentTutorial, currentIndex } = this.state;
 
@@ -111,6 +121,26 @@ export default class TutorialsList extends Component {
         </div>
         <div className="col-md-6">
           <h4>Database List</h4>
+          <table class="table">
+            <tr>
+              <td>name</td>
+              <td></td>
+            </tr>
+            {databases &&
+              databases.map((db, index) => (
+                <tr>
+                  <td>
+                    <Link to={`/databases/${db.name}`}>{db.name}</Link>
+                  </td>
+                  <td>
+                    <a href="#" class="btn btn-outline-danger"
+                       onClick={() => this.deleteDb(db)}>
+                      delete
+                    </a>
+                  </td>
+                </tr>
+              ))}
+          </table>
 
           <ul className="list-group">
             {databases &&
