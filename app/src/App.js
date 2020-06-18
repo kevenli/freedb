@@ -8,6 +8,7 @@ import AddDb from "./components/add-db.component";
 import DbDetail from "./components/db.component";
 import DbList from "./components/db-list.compoenet";
 import AddCollection from "./components/add_collection.component";
+import CollectionView from "./components/collection.component";
 
 class App extends Component{
   render() {
@@ -38,6 +39,7 @@ class App extends Component{
               <Route exact path="/add_database" component={AddDb} />
               <Route exact path="/databases/:id" component={DbDetail} />
               <Route exact path="/databases/:db_name/add_collection" component={AddCollection} />
+              <Route exact path="/databases/:db_name/collections/:col_name" component={CollectionView} />
             </Switch>
           </div>
         </div>

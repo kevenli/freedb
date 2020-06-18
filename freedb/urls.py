@@ -20,6 +20,10 @@ urlpatterns = [
          name='api_db_instance'),
     path('api/databases/<str:db_name>/collections', views.DatabaseCollectionList.as_view(),
          name='api_db_collections'),
+    path('api/databases/<str:db_name>/collections/<str:col_name>', views.DatabaseCollectionInstance.as_view(),
+         name='api_db_collection'),
+
+
     # path('api/v1/image/upload', views.ApiUploadView.as_view(), name='ims_upload'),
     # path('api/v1/image/crop', views.ApiImageCropView.as_view()),
     # path('api/v1/image/<int:image_id>', views.ApiImageView.as_view()),

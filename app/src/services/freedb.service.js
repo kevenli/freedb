@@ -20,6 +20,10 @@ class FreedbDataService {
     createCollection(db_name, data){
         return http.post(`/databases/${db_name}/collections`, data);
     }
+
+    queryCollection(db_name, col_name, query={}){
+        return http.get(`/databases/${db_name}/collections/${col_name}?query=${query}`)
+    }
 }
 
 export default new FreedbDataService();
