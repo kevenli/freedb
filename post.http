@@ -58,6 +58,12 @@ Authorization: Basic YWRtaW46MTIzNDU2
 Content-Type: application/json
 
 ###
+GET http://localhost:8000/api/databases/abc/collections/ddd?skip=20
+Accept: application/json
+Authorization: Basic YWRtaW46MTIzNDU2
+Content-Type: application/json
+
+###
 POST http://localhost:8000/api/databases/abc/collections/ddd/documents
 Accept: application/json
 Authorization: Basic YWRtaW46MTIzNDU2

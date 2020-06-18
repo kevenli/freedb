@@ -94,11 +94,23 @@ class DatabaseCollectionInstance(APIView):
         database = Database.objects.get(owner=request.user, name=db_name)
         collection = Collection.objects.get(database=database, name=col_name)
         mongo_col = get_db_collection(collection)
-        query = request.GET.get('query', '{}')
+        query = json.loads(request.GET.get('query', '{}'))
+        limit = int(request.GET.get('limit', 20))
+        skip = int(request.GET.get('skip', 0))
+        query_count = mongo_col.count_documents(query)
+        paging = {
+            'limit': limit,
+            'skip': skip,
+            'total': query_count
+        }
+
         docs = []
-        for doc in mongo_col.find():
+        for doc in mongo_col.find(filter=query, limit=limit, skip=skip):
             docs.append(serialize_doc(doc))
-        return Response(docs)
+        return Response({
+            "data": docs,
+            'paging': paging
+        })
 
 
 class DatabaseIndex(ListView):

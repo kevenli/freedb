@@ -22,7 +22,7 @@ class FreedbDataService {
     }
 
     queryCollection(db_name, col_name, query={}){
-        return http.get(`/databases/${db_name}/collections/${col_name}?query=${query}`)
+        return http.get(`/databases/${db_name}/collections/${col_name}?query=${JSON.stringify(query)}`)
     }
 }
 

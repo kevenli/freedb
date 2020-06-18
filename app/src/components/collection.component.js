@@ -3,6 +3,7 @@ import Breadcrumb from "react-bootstrap/Breadcrumb";
 import {Link} from "react-router-dom";
 import FreedbDataService from "../services/freedb.service";
 import { LinkContainer } from 'react-router-bootstrap'
+import { Card } from 'react-bootstrap';
 
 export default class CollectionView extends Component {
   constructor(props){
@@ -12,7 +13,10 @@ export default class CollectionView extends Component {
     this.state = {
       db_name: "",
       col_name: "",
-      docs: []
+      docs: [],
+      total_rows: 0,
+      skip: 0,
+      paging:{}
     }
   }
 
@@ -29,7 +33,8 @@ export default class CollectionView extends Component {
     FreedbDataService.queryCollection(this.state.db_name, this.state.col_name)
         .then(response=>{
           this.setState({
-            docs: response.data
+            docs: response.data.data,
+            paging: response.data.paging
           })
         }).catch(e=>{
       console.log(e);
@@ -51,9 +56,12 @@ export default class CollectionView extends Component {
       </Breadcrumb>
       {docs &&
       docs.map((doc, index) => (
-          <div>
+          <Card>
+            <Card.Body>
             <pre>
-              {JSON.stringify(doc, undefined, 2)}</pre></div>
+              {JSON.stringify(doc, undefined, 2)}</pre>
+            </Card.Body>
+          </Card>
       ))}
     </div>
 
