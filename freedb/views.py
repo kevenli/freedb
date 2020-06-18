@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 from django.shortcuts import render
 from django.views.generic import ListView
 from django.views import View
@@ -132,6 +133,7 @@ class CollectionView(APIView):
             return render(request, 'freedb/collection_view.html')
 
         query = json.loads(request.GET.get('query', '{}'))
+        limit = int(request.GET.get('limit', 20))
         #docs = col.find(query)
 
         docs = []
@@ -185,3 +187,54 @@ class CollectionRowView(APIView):
             row_id = str(row_id)
         row = col.find_one_and_update({"_id": row_id}, new_row)
         return Response({})
+
+
+class JsonLineItemStream:
+    def __init__(self, filepath):
+        self.f = open(filepath, 'r')
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        line  = next(self.f)
+        return json.loads(line)
+
+
+def save_item(col, doc):
+    if 'id' in doc:
+        doc['_id'] = str(doc['id'])
+    try:
+        new_id = col.insert_one(doc).inserted_id
+        return str(new_id), 'created'
+    except pymongo.errors.DuplicateKeyError:
+        return str(doc['_id']), 'skipped'
+
+
+class DatabaseCollectionDocuments(APIView):
+    def post(self, request, db_name, col_name):
+        database = Database.objects.get(owner=self.request.user, name=db_name)
+        collection = Collection.objects.get(database=database, name=col_name)
+        col = get_db_collection(collection)
+
+        stream = None
+        if 'file' in request.FILES:
+            upload_file = request.FILES['file']
+            upload_ext = os.path.splitext(upload_file.name)[-1]
+            if upload_ext.lower() == '.jl':
+                # json line file
+                stream = JsonLineItemStream(upload_file.temporary_file_path())
+            else:
+                stream = [json.loads(upload_file.read())]
+        else:
+            stream = [request.data]
+
+        ret = []
+        for item in stream:
+            saved_id, result = save_item(col, item)
+            ret.append({
+                "id": saved_id,
+                'result': result
+            })
+
+        return Response(ret)

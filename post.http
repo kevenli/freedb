@@ -58,3 +58,14 @@ Authorization: Basic YWRtaW46MTIzNDU2
 Content-Type: application/json
 
 ###
+POST http://localhost:8000/api/databases/abc/collections/ddd/documents
+Accept: application/json
+Authorization: Basic YWRtaW46MTIzNDU2
+Content-Type: application/json
+
+{
+  "id":"5ee8d405f9a9aaad99ecbae0",
+"name": "test4"
+}
+
+###
