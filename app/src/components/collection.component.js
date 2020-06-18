@@ -2,6 +2,7 @@ import React, {Component} from "react";
 import Breadcrumb from "react-bootstrap/Breadcrumb";
 import {Link} from "react-router-dom";
 import FreedbDataService from "../services/freedb.service";
+import { LinkContainer } from 'react-router-bootstrap'
 
 export default class CollectionView extends Component {
   constructor(props){
@@ -38,12 +39,16 @@ export default class CollectionView extends Component {
   render() {
     const {docs} = this.state;
     return <div>
-        <Breadcrumb.Item as={Link} to={`/databases/${this.state.db_name}`}>
+      <Breadcrumb>
+        <LinkContainer to={`/databases/${this.state.db_name}`} >
+        <Breadcrumb.Item>
             {this.state.db_name}
         </Breadcrumb.Item>
+        </LinkContainer>
         <Breadcrumb.Item>
           {this.state.col_name}
         </Breadcrumb.Item>
+      </Breadcrumb>
       {docs &&
       docs.map((doc, index) => (
           <div>
