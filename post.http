@@ -75,3 +75,10 @@ Content-Type: application/json
 }
 
 ###
+POST http://localhost:8000/api/databases
+
+###
+
+GET http://localhost:8000/
+
+###

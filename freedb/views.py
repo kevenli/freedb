@@ -6,6 +6,7 @@ from django.views.generic import ListView
 from django.views import View
 from django.http import JsonResponse
 from django.db import transaction
+from django.contrib.auth.mixins import LoginRequiredMixin
 import django.db.utils
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -27,8 +28,8 @@ def serialize_doc(doc):
     return dict(doc)
     return doc
 
-# Create your views here.
-class IndexView(ListView):
+
+class IndexView(LoginRequiredMixin, ListView):
     model = Database
     template_name = 'freedb/index.html'
 
@@ -129,7 +130,7 @@ class DatabaseCollectionInstance(APIView):
         })
 
 
-class DatabaseIndex(ListView):
+class DatabaseIndex(LoginRequiredMixin, ListView):
     model = Collection
     template_name = 'freedb/database_index.html'
 
