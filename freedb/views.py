@@ -6,6 +6,7 @@ from django.views.generic import ListView
 from django.views import View
 from django.http import JsonResponse
 from django.db import transaction
+import django.db.utils
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from bson.json_util import dumps
@@ -45,8 +46,18 @@ class DatabaseList(APIView):
     @transaction.atomic
     def post(self, request):
         db_name = request.data.get('name')
-        database = Database(owner=request.user, name=db_name)
-        database.save()
+        if not db_name:
+            return Response(data={
+                'err_msg': 'db_name cannot be null'
+            },status=400)
+
+        try:
+            database = Database(owner=request.user, name=db_name)
+            database.save()
+        except django.db.utils.IntegrityError:
+            return Response(data={
+                'err_msg': 'db already exists'
+            }, status=409)
 
         mongo_database = client[database.name]
         dblist = client.list_database_names()
@@ -81,7 +92,12 @@ class DatabaseCollectionList(APIView):
         database = Database.objects.get(owner=request.user, name=db_name)
         collection_name = self.request.data.get('name')
         collection = Collection(database=database, name=collection_name)
-        collection.save()
+        try:
+            collection.save()
+        except django.db.utils.IntegrityError:
+            return Response(status=409, data={
+                'err_msg': 'collection already exists.'
+            })
 
         mongo_db = client[database.name]
         mongo_col = mongo_db[collection.name]
