@@ -8,7 +8,7 @@ from . import views
 #from .schema import schema
 
 urlpatterns = [
-    path('', views.IndexView.as_view(), name="index"),
+    #path('', views.IndexView.as_view(), name="index"),
     #path('', login_required(TemplateView.as_view(template_name="index.html"))),
     path('db', views.DatabaseList.as_view(), name='db_list'),
     path('db/<str:database_name>', views.DatabaseIndex.as_view(),

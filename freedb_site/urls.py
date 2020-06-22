@@ -20,5 +20,6 @@ from django.conf import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('freedb.urls'))
+    path('', include('frontend.urls')),
+    path('', include('freedb.urls')),
 ]+ static(settings.STATIC_URL)
