@@ -121,25 +121,29 @@ export default class TutorialsList extends Component {
         </div>
         <div className="col-md-6">
           <h4>Database List</h4>
-          <table class="table">
+          <table className="table">
+            <thead>
             <tr>
               <td>name</td>
               <td></td>
             </tr>
+            </thead>
+            <tbody>
             {databases &&
               databases.map((db, index) => (
-                <tr>
+                <tr key={db.name}>
                   <td>
                     <Link to={`/databases/${db.name}`}>{db.name}</Link>
                   </td>
                   <td>
-                    <a href="#" class="btn btn-outline-danger"
+                    <a href="#" className="btn btn-outline-danger"
                        onClick={() => this.deleteDb(db)}>
                       delete
                     </a>
                   </td>
                 </tr>
               ))}
+            </tbody>
           </table>
 
           <ul className="list-group">
