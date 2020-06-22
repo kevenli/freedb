@@ -1,4 +1,5 @@
 import http from "../http-common";
+import Cookies from 'js-cookie';
 
 class FreedbDataService {
     getAllDb(){
@@ -23,6 +24,10 @@ class FreedbDataService {
 
     queryCollection(db_name, col_name, query={}){
         return http.get(`/databases/${db_name}/collections/${col_name}?query=${JSON.stringify(query)}`)
+    }
+
+    saveDoc(db_name, col_name, data){
+        return http.post(`/databases/${db_name}/collections/${col_name}/documents`, data);
     }
 }
 

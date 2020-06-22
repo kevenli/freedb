@@ -231,8 +231,11 @@ class JsonLineItemStream:
 
 
 def save_item(col, doc):
+    if len(doc) == 0:
+        raise Exception("Post data cannot be null.")
     if 'id' in doc:
         doc['_id'] = str(doc['id'])
+    doc = {key.lower(): value for key, value in doc.items()}
     try:
         new_id = col.insert_one(doc).inserted_id
         return str(new_id), 'created'
