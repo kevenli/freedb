@@ -112,6 +112,14 @@ class DatabaseCollectionInstance(APIView):
         collection = Collection.objects.get(database=database, name=col_name)
         mongo_col = get_db_collection(collection)
         query = json.loads(request.GET.get('query', '{}'))
+        if 'id' in query:
+            try:
+                query["_id"] = ObjectId(query["id"])
+            except:
+                query['_id'] = str(query["id"])
+            finally:
+                query.pop('id')
+
         limit = int(request.GET.get('limit', 20))
         skip = int(request.GET.get('skip', 0))
         query_count = mongo_col.count_documents(query)
