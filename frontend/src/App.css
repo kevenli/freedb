@@ -52,3 +52,11 @@
   max-width: 300px;
   margin: auto;
 }
+
+.my-inline-group>.input-group-prepend {
+    width: 100px;
+}
+
+.my-inline-group .input-group-text {
+    width: 100%;
+}

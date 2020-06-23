@@ -15,6 +15,7 @@ export default class CollectionView extends Component {
     this.btnSaveNewDoc = this.btnSaveNewDoc.bind(this);
     this.textQueryChange = this.textQueryChange.bind(this);
     this.btnQueryClick = this.btnQueryClick.bind(this);
+    this.txtSkipChange = this.txtSkipChange.bind(this);
 
     this.state = {
       db_name: "",
@@ -74,6 +75,12 @@ export default class CollectionView extends Component {
     })
   }
 
+  txtSkipChange(e){
+    this.setState({
+      skip: parseInt(e.target.value)
+    })
+  }
+
   btnQueryClick(){
     this.queryCollection();
   }
@@ -86,7 +93,7 @@ export default class CollectionView extends Component {
     catch(SyntaxError){
       query = {}
     }
-    FreedbDataService.queryCollection(this.state.db_name, this.state.col_name, query)
+    FreedbDataService.queryCollection(this.state.db_name, this.state.col_name, query, this.state.skip)
         .then(response=>{
           this.setState({
             docs: response.data.data,
@@ -126,15 +133,21 @@ export default class CollectionView extends Component {
       <Fragment>
         <Form>
           <Form.Row>
-            <InputGroup>
+            <InputGroup className="my-inline-group">
               <InputGroup.Prepend>
                 <InputGroup.Text>Query</InputGroup.Text>
               </InputGroup.Prepend>
-              <FormControl id="query" placeholder="{}" onChange={this.textQueryChange} />
+              <FormControl id="query" defaultValue="{}" onChange={this.textQueryChange} />
               <InputGroup.Append>
                 <Button onClick={this.btnQueryClick}>Go</Button>
               </InputGroup.Append>
 
+            </InputGroup>
+            <InputGroup className="my-inline-group">
+              <InputGroup.Prepend>
+                <InputGroup.Text>Skip</InputGroup.Text>
+              </InputGroup.Prepend>
+              <FormControl id="skip" defaultValue="0" onChange={this.txtSkipChange} />
             </InputGroup>
           </Form.Row>
         </Form>
