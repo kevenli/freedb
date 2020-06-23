@@ -76,8 +76,12 @@ export default class CollectionView extends Component {
   }
 
   txtSkipChange(e){
+    let inputSkip = parseInt(e.target.value);
+    if (isNaN(inputSkip)){
+      inputSkip = 0;
+    }
     this.setState({
-      skip: parseInt(e.target.value)
+      skip: inputSkip
     })
   }
 
