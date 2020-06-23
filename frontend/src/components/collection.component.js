@@ -13,7 +13,7 @@ export default class CollectionView extends Component {
     this.updateNewDoc = this.updateNewDoc.bind(this);
     this.btnSaveNewDoc = this.btnSaveNewDoc.bind(this);
     this.textQueryChange = this.textQueryChange.bind(this);
-    this.btnQueryClick = this.btnQueryClick.bind(this); 
+    this.btnQueryClick = this.btnQueryClick.bind(this);
     this.txtSkipChange = this.txtSkipChange.bind(this);
     this.txtSortChange = this.txtSortChange.bind(this);
     this.txtLimitChange = this.txtLimitChange.bind(this);
@@ -173,13 +173,6 @@ export default class CollectionView extends Component {
               <InputGroup.Append>
                 <Button onClick={this.btnQueryClick}>Go</Button>
               </InputGroup.Append>
-
-            </InputGroup>
-            <InputGroup className="my-inline-group">
-              <InputGroup.Prepend>
-                <InputGroup.Text>Skip</InputGroup.Text>
-              </InputGroup.Prepend>
-              <FormControl id="skip" value={this.state.skip} onChange={this.txtSkipChange} />
             </InputGroup>
             <InputGroup className="my-inline-group">
               <InputGroup.Prepend>
@@ -189,9 +182,15 @@ export default class CollectionView extends Component {
             </InputGroup>
             <InputGroup className="my-inline-group">
               <InputGroup.Prepend>
+                <InputGroup.Text>Skip</InputGroup.Text>
+              </InputGroup.Prepend>
+              <FormControl id="skip" value={this.state.skip} type="number" onChange={this.txtSkipChange} />
+            </InputGroup>
+            <InputGroup className="my-inline-group">
+              <InputGroup.Prepend>
                 <InputGroup.Text>Limit</InputGroup.Text>
               </InputGroup.Prepend>
-              <FormControl id="limit" value={this.state.limit} onChange={this.txtLimitChange} />
+              <FormControl id="limit" value={this.state.limit} type="number" onChange={this.txtLimitChange} />
             </InputGroup>
           </Form.Row>
         </Form>
