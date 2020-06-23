@@ -248,18 +248,7 @@ export default class CollectionView extends Component {
             search: `?skip=${nextPageSkip}`,
           }} className='btn btn-outline-dark'>Next</Link>
         }
-
-        <Link to="/" className="btn">Root</Link>
       </Breadcrumb>
-      <Card>
-        <Card.Body>{this.state.rows_count} Rows of {this.state.total_rows}
-          <ButtonGroup className="ml-auto px-2" >
-            <Button variant="outline-dark" onClick={this.btnImportDataClick}>Import</Button>
-            <Button variant="outline-dark" onClick={this.btnNewDocClick}>New Doc</Button>
-            <Button variant="outline-dark">Delete Collection</Button>
-          </ButtonGroup>
-        </Card.Body>
-      </Card>
       {docs &&
       docs.map((doc, index) => (
           <Card key={doc.id}>
