@@ -2,7 +2,7 @@ import React, {Component, Fragment} from "react";
 import Breadcrumb from "react-bootstrap/Breadcrumb";
 import FreedbDataService from "../services/freedb.service";
 import { LinkContainer } from 'react-router-bootstrap'
-import { Card, Button, ButtonGroup, FormText, Form, InputGroup, FormControl } from 'react-bootstrap';
+import {Card, Button, ButtonGroup, FormText, Form, InputGroup, FormControl, Modal} from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 
 export default class CollectionView extends Component {
@@ -18,6 +18,8 @@ export default class CollectionView extends Component {
     this.txtSkipChange = this.txtSkipChange.bind(this);
     this.txtSortChange = this.txtSortChange.bind(this);
     this.txtLimitChange = this.txtLimitChange.bind(this);
+    this.btnImportDataClick = this.btnImportDataClick.bind(this);
+    this.btnUploadFileClick = this.btnUploadFileClick.bind(this);
 
     this.state = {
       db_name: "",
@@ -31,7 +33,9 @@ export default class CollectionView extends Component {
       newDocStr: "",
       queryStr: "{}",
       sortStr:"",
-      limit:20
+      limit:20,
+      showImportDataDialog: false,
+      uploadFile: null
     }
   }
 
@@ -97,6 +101,12 @@ export default class CollectionView extends Component {
         })
   }
 
+  btnImportDataClick(){
+    this.setState({
+      showImportDataDialog: true
+    })
+  }
+
   textQueryChange(e){
     this.setState({
       queryStr: e.target.value
@@ -135,6 +145,10 @@ export default class CollectionView extends Component {
     this.queryCollection();
   }
 
+  btnUploadFileClick(){
+    FreedbDataService.uploadDocs(this.state.db_name, this.state.col_name, this.state.uploadFile);
+  }
+
   queryCollection(){
     let query={};
     try{
@@ -158,7 +172,7 @@ export default class CollectionView extends Component {
   }
 
   render() {
-    const {docs} = this.state;
+    const {docs, showImportDataDialog} = this.state;
 
     const previousSkip = Math.max(this.state.skip - this.state.limit, 0);
     const hasPreviousPage = this.state.skip > 0;
@@ -176,6 +190,7 @@ export default class CollectionView extends Component {
           {this.state.col_name}
         </Breadcrumb.Item>
         <ButtonGroup className="ml-auto px-2" >
+          <Button variant="outline-dark" onClick={this.btnImportDataClick}>Import</Button>
           <Button variant="outline-dark" onClick={this.btnNewDocClick}>New Doc</Button>
           <Button variant="outline-dark">Delete Collection</Button>
         </ButtonGroup>
@@ -238,11 +253,11 @@ export default class CollectionView extends Component {
       </Breadcrumb>
       <Card>
         <Card.Body>{this.state.rows_count} Rows of {this.state.total_rows}
-
-                <ButtonGroup className="ml-auto px-2" >
-          <Button variant="outline-dark" onClick={this.btnNewDocClick}>New Doc</Button>
-          <Button variant="outline-dark">Delete Collection</Button>
-        </ButtonGroup>
+          <ButtonGroup className="ml-auto px-2" >
+            <Button variant="outline-dark" onClick={this.btnImportDataClick}>Import</Button>
+            <Button variant="outline-dark" onClick={this.btnNewDocClick}>New Doc</Button>
+            <Button variant="outline-dark">Delete Collection</Button>
+          </ButtonGroup>
         </Card.Body>
       </Card>
       {docs &&
@@ -254,7 +269,25 @@ export default class CollectionView extends Component {
             </Card.Body>
           </Card>
       ))}
-    </div>
+      <Modal show={showImportDataDialog} onHide={()=>this.setState({showImportDataDialog:false})}>
+        <Modal.Header closeButton>
+          <Modal.Title>Import Data</Modal.Title>
+        </Modal.Header>
 
+        <Modal.Body>
+          <Form>
+            <Form.Group>
+              <Form.File id="uploadFile" onChange={(e)=>this.setState({uploadFile:e.target.files[0]})}></Form.File>
+            </Form.Group>
+          </Form>
+          <p>Select data file first.</p>
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button variant="secondary" onClick={()=>this.setState({showImportDataDialog:false})}>Close</Button>
+          <Button variant="primary" onClick={this.btnUploadFileClick}>Save changes</Button>
+        </Modal.Footer>
+      </Modal>
+    </div>
   }
 }
