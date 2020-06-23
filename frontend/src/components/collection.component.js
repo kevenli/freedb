@@ -1,9 +1,9 @@
-import React, {Component} from "react";
+import React, {Component, Fragment} from "react";
 import Breadcrumb from "react-bootstrap/Breadcrumb";
 import {Link} from "react-router-dom";
 import FreedbDataService from "../services/freedb.service";
 import { LinkContainer } from 'react-router-bootstrap'
-import { Card, Button, ButtonGroup, FormText, Form } from 'react-bootstrap';
+import { Card, Button, ButtonGroup, FormText, Form, InputGroup, FormControl } from 'react-bootstrap';
 
 export default class CollectionView extends Component {
   constructor(props){
@@ -13,6 +13,8 @@ export default class CollectionView extends Component {
     this.btnCancelNewDoc = this.btnCancelNewDoc.bind(this);
     this.updateNewDoc = this.updateNewDoc.bind(this);
     this.btnSaveNewDoc = this.btnSaveNewDoc.bind(this);
+    this.textQueryChange = this.textQueryChange.bind(this);
+    this.btnQueryClick = this.btnQueryClick.bind(this);
 
     this.state = {
       db_name: "",
@@ -22,7 +24,8 @@ export default class CollectionView extends Component {
       skip: 0,
       paging:{},
       showNewDocView: false,
-      newDocStr: ""
+      newDocStr: "",
+      queryStr: ""
     }
   }
 
@@ -65,8 +68,25 @@ export default class CollectionView extends Component {
         })
   }
 
+  textQueryChange(e){
+    this.setState({
+      queryStr: e.target.value
+    })
+  }
+
+  btnQueryClick(){
+    this.queryCollection();
+  }
+
   queryCollection(){
-    FreedbDataService.queryCollection(this.state.db_name, this.state.col_name)
+    let query={};
+    try{
+      query = JSON.parse(this.state.queryStr);
+    }
+    catch(SyntaxError){
+      query = {}
+    }
+    FreedbDataService.queryCollection(this.state.db_name, this.state.col_name, query)
         .then(response=>{
           this.setState({
             docs: response.data.data,
@@ -103,6 +123,22 @@ export default class CollectionView extends Component {
             <Button onClick={this.btnCancelNewDoc}>Cancel</Button>
           </Form>
       }
+      <Fragment>
+        <Form>
+          <Form.Row>
+            <InputGroup>
+              <InputGroup.Prepend>
+                <InputGroup.Text>Query</InputGroup.Text>
+              </InputGroup.Prepend>
+              <FormControl id="query" placeholder="{}" onChange={this.textQueryChange} />
+              <InputGroup.Append>
+                <Button onClick={this.btnQueryClick}>Go</Button>
+              </InputGroup.Append>
+
+            </InputGroup>
+          </Form.Row>
+        </Form>
+      </Fragment>
 
       {docs &&
       docs.map((doc, index) => (
