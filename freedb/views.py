@@ -135,8 +135,11 @@ class DatabaseCollectionInstance(APIView):
         }
 
         docs = []
+        rows_count = 0
         for doc in mongo_col.find(filter=query, limit=limit, skip=skip, sort=sort):
             docs.append(serialize_doc(doc))
+            rows_count += 1
+        paging['rows'] = rows_count
         return Response({
             "data": docs,
             'paging': paging

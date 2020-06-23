@@ -3,6 +3,7 @@ import Breadcrumb from "react-bootstrap/Breadcrumb";
 import FreedbDataService from "../services/freedb.service";
 import { LinkContainer } from 'react-router-bootstrap'
 import { Card, Button, ButtonGroup, FormText, Form, InputGroup, FormControl } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 
 export default class CollectionView extends Component {
   constructor(props){
@@ -23,6 +24,7 @@ export default class CollectionView extends Component {
       col_name: "",
       docs: [],
       total_rows: 0,
+      rows_count: 0,
       skip: 0,
       paging:{},
       showNewDocView: false,
@@ -47,6 +49,22 @@ export default class CollectionView extends Component {
     }, ()=>{
       this.queryCollection();
     });
+  }
+
+  componentWillReceiveProps(nextProps){
+    if (nextProps.id === this.props.id){
+      const params = new URLSearchParams(nextProps.location.search)
+      let skip=parseInt(params.get('skip'));
+      if (isNaN(skip)){
+        skip = 0;
+      }
+
+      this.setState({
+        skip: skip
+      }, ()=>{
+        this.queryCollection();
+      });
+    }
   }
 
   btnNewDocClick(e){
@@ -104,7 +122,8 @@ export default class CollectionView extends Component {
   txtLimitChange(e){
     let inputLimit = parseInt(e.target.value);
     if (isNaN(inputLimit)){
-      inputLimit = 20
+      //inputLimit = 20
+      return;
     }
 
     this.setState({
@@ -129,7 +148,9 @@ export default class CollectionView extends Component {
         .then(response=>{
           this.setState({
             docs: response.data.data,
-            paging: response.data.paging
+            paging: response.data.paging,
+            total_rows: response.data.paging.total,
+            rows_count: response.data.paging.rows
           })
         }).catch(e=>{
       console.log(e);
@@ -138,6 +159,12 @@ export default class CollectionView extends Component {
 
   render() {
     const {docs} = this.state;
+
+    const previousSkip = Math.max(this.state.skip - this.state.limit, 0);
+    const hasPreviousPage = this.state.skip > 0;
+    const hasNextPage = this.state.skip + this.state.limit < this.state.total_rows;
+    const nextPageSkip = this.state.skip + this.state.limit;
+
     return <div>
       <Breadcrumb>
         <LinkContainer to={`/databases/${this.state.db_name}`} >
@@ -190,12 +217,34 @@ export default class CollectionView extends Component {
               <InputGroup.Prepend>
                 <InputGroup.Text>Limit</InputGroup.Text>
               </InputGroup.Prepend>
-              <FormControl id="limit" value={this.state.limit} type="number" onChange={this.txtLimitChange} />
+              <FormControl id="limit" defaultValue={this.state.limit} type="number" onChange={this.txtLimitChange} />
             </InputGroup>
           </Form.Row>
         </Form>
       </Fragment>
+      <Breadcrumb>
+        {this.state.skip+1}-{this.state.skip+this.state.rows_count} of {this.state.total_rows}
+        {hasPreviousPage &&
+          <Link to={`?skip=${previousSkip}`} className='btn btn-outline-dark'>Previous</Link>
+        }
 
+        {hasNextPage &&
+          <Link to={{
+            search: `?skip=${nextPageSkip}`,
+          }} className='btn btn-outline-dark'>Next</Link>
+        }
+
+        <Link to="/" className="btn">Root</Link>
+      </Breadcrumb>
+      <Card>
+        <Card.Body>{this.state.rows_count} Rows of {this.state.total_rows}
+
+                <ButtonGroup className="ml-auto px-2" >
+          <Button variant="outline-dark" onClick={this.btnNewDocClick}>New Doc</Button>
+          <Button variant="outline-dark">Delete Collection</Button>
+        </ButtonGroup>
+        </Card.Body>
+      </Card>
       {docs &&
       docs.map((doc, index) => (
           <Card key={doc.id}>
