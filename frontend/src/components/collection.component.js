@@ -16,6 +16,7 @@ export default class CollectionView extends Component {
     this.textQueryChange = this.textQueryChange.bind(this);
     this.btnQueryClick = this.btnQueryClick.bind(this);
     this.txtSkipChange = this.txtSkipChange.bind(this);
+    this.txtSortChange = this.txtSortChange.bind(this);
 
     this.state = {
       db_name: "",
@@ -26,7 +27,8 @@ export default class CollectionView extends Component {
       paging:{},
       showNewDocView: false,
       newDocStr: "",
-      queryStr: ""
+      queryStr: "",
+      sortStr:""
     }
   }
 
@@ -85,6 +87,12 @@ export default class CollectionView extends Component {
     })
   }
 
+  txtSortChange(e){
+    this.setState({
+      sortStr: e.target.value
+    })
+  }
+
   btnQueryClick(){
     this.queryCollection();
   }
@@ -97,7 +105,7 @@ export default class CollectionView extends Component {
     catch(SyntaxError){
       query = {}
     }
-    FreedbDataService.queryCollection(this.state.db_name, this.state.col_name, query, this.state.skip)
+    FreedbDataService.queryCollection(this.state.db_name, this.state.col_name, query, this.state.skip, this.state.sortStr)
         .then(response=>{
           this.setState({
             docs: response.data.data,
@@ -152,6 +160,12 @@ export default class CollectionView extends Component {
                 <InputGroup.Text>Skip</InputGroup.Text>
               </InputGroup.Prepend>
               <FormControl id="skip" defaultValue="0" onChange={this.txtSkipChange} />
+            </InputGroup>
+            <InputGroup className="my-inline-group">
+              <InputGroup.Prepend>
+                <InputGroup.Text>Sort</InputGroup.Text>
+              </InputGroup.Prepend>
+              <FormControl id="sort" defaultValue="" onChange={this.txtSortChange} />
             </InputGroup>
           </Form.Row>
         </Form>

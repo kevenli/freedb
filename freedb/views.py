@@ -122,6 +122,11 @@ class DatabaseCollectionInstance(APIView):
 
         limit = int(request.GET.get('limit', 20))
         skip = int(request.GET.get('skip', 0))
+        try:
+            param_sort = json.loads(request.GET.get('sort', '{}'))
+        except json.decoder.JSONDecodeError:
+            param_sort = {}
+        sort = list(param_sort.items())
         query_count = mongo_col.count_documents(query)
         paging = {
             'limit': limit,
@@ -130,7 +135,7 @@ class DatabaseCollectionInstance(APIView):
         }
 
         docs = []
-        for doc in mongo_col.find(filter=query, limit=limit, skip=skip):
+        for doc in mongo_col.find(filter=query, limit=limit, skip=skip, sort=sort):
             docs.append(serialize_doc(doc))
         return Response({
             "data": docs,

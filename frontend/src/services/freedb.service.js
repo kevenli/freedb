@@ -22,8 +22,8 @@ class FreedbDataService {
         return http.post(`/databases/${db_name}/collections`, data);
     }
 
-    queryCollection(db_name, col_name, query={}, skip=0){
-        return http.get(`/databases/${db_name}/collections/${col_name}?query=${JSON.stringify(query)}&skip=${skip}`)
+    queryCollection(db_name, col_name, query={}, skip=0, sort=""){
+        return http.get(`/databases/${db_name}/collections/${col_name}?query=${JSON.stringify(query)}&skip=${skip}&sort=${sort}`)
     }
 
     saveDoc(db_name, col_name, data){
