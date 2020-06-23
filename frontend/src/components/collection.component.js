@@ -1,6 +1,5 @@
 import React, {Component, Fragment} from "react";
 import Breadcrumb from "react-bootstrap/Breadcrumb";
-import {Link} from "react-router-dom";
 import FreedbDataService from "../services/freedb.service";
 import { LinkContainer } from 'react-router-bootstrap'
 import { Card, Button, ButtonGroup, FormText, Form, InputGroup, FormControl } from 'react-bootstrap';
@@ -14,9 +13,10 @@ export default class CollectionView extends Component {
     this.updateNewDoc = this.updateNewDoc.bind(this);
     this.btnSaveNewDoc = this.btnSaveNewDoc.bind(this);
     this.textQueryChange = this.textQueryChange.bind(this);
-    this.btnQueryClick = this.btnQueryClick.bind(this);
+    this.btnQueryClick = this.btnQueryClick.bind(this); 
     this.txtSkipChange = this.txtSkipChange.bind(this);
     this.txtSortChange = this.txtSortChange.bind(this);
+    this.txtLimitChange = this.txtLimitChange.bind(this);
 
     this.state = {
       db_name: "",
@@ -27,15 +27,23 @@ export default class CollectionView extends Component {
       paging:{},
       showNewDocView: false,
       newDocStr: "",
-      queryStr: "",
-      sortStr:""
+      queryStr: "{}",
+      sortStr:"",
+      limit:20
     }
   }
 
   componentDidMount() {
+    const params = new URLSearchParams(this.props.location.search)
+    let skip=parseInt(params.get('skip'));
+    if (isNaN(skip)){
+      skip = 0;
+    }
+
     this.setState({
       db_name: this.props.match.params.db_name,
-      col_name: this.props.match.params.col_name
+      col_name: this.props.match.params.col_name,
+      skip: skip
     }, ()=>{
       this.queryCollection();
     });
@@ -93,6 +101,17 @@ export default class CollectionView extends Component {
     })
   }
 
+  txtLimitChange(e){
+    let inputLimit = parseInt(e.target.value);
+    if (isNaN(inputLimit)){
+      inputLimit = 20
+    }
+
+    this.setState({
+      limit: inputLimit
+    })
+  }
+
   btnQueryClick(){
     this.queryCollection();
   }
@@ -105,7 +124,8 @@ export default class CollectionView extends Component {
     catch(SyntaxError){
       query = {}
     }
-    FreedbDataService.queryCollection(this.state.db_name, this.state.col_name, query, this.state.skip, this.state.sortStr)
+    FreedbDataService.queryCollection(this.state.db_name, this.state.col_name, query,
+        this.state.skip, this.state.sortStr, this.state.limit)
         .then(response=>{
           this.setState({
             docs: response.data.data,
@@ -149,7 +169,7 @@ export default class CollectionView extends Component {
               <InputGroup.Prepend>
                 <InputGroup.Text>Query</InputGroup.Text>
               </InputGroup.Prepend>
-              <FormControl id="query" defaultValue="{}" onChange={this.textQueryChange} />
+              <FormControl id="query" value={this.state.queryStr} onChange={this.textQueryChange} />
               <InputGroup.Append>
                 <Button onClick={this.btnQueryClick}>Go</Button>
               </InputGroup.Append>
@@ -159,13 +179,19 @@ export default class CollectionView extends Component {
               <InputGroup.Prepend>
                 <InputGroup.Text>Skip</InputGroup.Text>
               </InputGroup.Prepend>
-              <FormControl id="skip" defaultValue="0" onChange={this.txtSkipChange} />
+              <FormControl id="skip" value={this.state.skip} onChange={this.txtSkipChange} />
             </InputGroup>
             <InputGroup className="my-inline-group">
               <InputGroup.Prepend>
                 <InputGroup.Text>Sort</InputGroup.Text>
               </InputGroup.Prepend>
-              <FormControl id="sort" defaultValue="" onChange={this.txtSortChange} />
+              <FormControl id="sort" value={this.state.sortStr} onChange={this.txtSortChange} />
+            </InputGroup>
+            <InputGroup className="my-inline-group">
+              <InputGroup.Prepend>
+                <InputGroup.Text>Limit</InputGroup.Text>
+              </InputGroup.Prepend>
+              <FormControl id="limit" value={this.state.limit} onChange={this.txtLimitChange} />
             </InputGroup>
           </Form.Row>
         </Form>
