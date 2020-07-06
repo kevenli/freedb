@@ -286,3 +286,18 @@ class DatabaseCollectionDocuments(APIView):
             })
 
         return Response(ret)
+
+
+class DatabaseCollectionDocumentInstance(APIView):
+    def get(self, request, db_name, col_name, doc_id):
+        database = Database.objects.get(owner=self.request.user, name=db_name)
+        collection = Collection.objects.get(database=database, name=col_name)
+        col = get_db_collection(collection)
+        try:
+            doc_id = ObjectId(doc_id)
+        except:
+            pass
+        doc = col.find_one({"_id": doc_id})
+        if not doc:
+            return Response(status=404)
+        return Response(doc)
