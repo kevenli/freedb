@@ -15,6 +15,7 @@ from bson import ObjectId
 from bson.errors import InvalidId
 import pymongo
 from .models import Database, Collection
+from . import models
 from .database import get_db_collection, client
 from .serializers import DatabaseSerializer
 
@@ -108,8 +109,14 @@ class DatabaseCollectionList(APIView):
 
 class DatabaseCollectionInstance(APIView):
     def get(self, request, db_name, col_name):
-        database = Database.objects.get(owner=request.user, name=db_name)
-        collection = Collection.objects.get(database=database, name=col_name)
+        try:
+            database = models.Database.objects.get(owner=request.user, name=db_name)
+        except models.Database.DoesNotExist:
+            return Response(status=404)
+        try:
+            collection = models.Collection.objects.get(database=database, name=col_name)
+        except models.Collection.DoesNotExist:
+            return Response(status=404)
         mongo_col = get_db_collection(collection)
         query = json.loads(request.GET.get('query', '{}'))
         if 'id' in query:
@@ -290,8 +297,8 @@ class DatabaseCollectionDocuments(APIView):
 
 class DatabaseCollectionDocumentInstance(APIView):
     def get(self, request, db_name, col_name, doc_id):
-        database = Database.objects.get(owner=self.request.user, name=db_name)
-        collection = Collection.objects.get(database=database, name=col_name)
+        database = models.Database.objects.get(owner=self.request.user, name=db_name)
+        collection = models.Collection.objects.get(database=database, name=col_name)
         col = get_db_collection(collection)
         try:
             doc_id = ObjectId(doc_id)
@@ -301,3 +308,14 @@ class DatabaseCollectionDocumentInstance(APIView):
         if not doc:
             return Response(status=404)
         return Response(doc)
+
+    def delete(self, request, db_name, col_name, doc_id):
+        database = Database.objects.get(owner=self.request.user, name=db_name)
+        collection = Collection.objects.get(database=database, name=col_name)
+        col = get_db_collection(collection)
+        try:
+            doc_id = ObjectId(doc_id)
+        except:
+            pass
+        result = col.delete_one({"_id": doc_id})
+        return Response({"delete_count": result.delete_count})
