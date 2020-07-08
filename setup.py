@@ -6,7 +6,10 @@ setup(
     version='0.0.1',
     packages=find_packages(),
     package_data = {
-        'frontend': ['templates/frontend/*'],
+        'frontend': [
+            'templates/frontend/*',
+            'static/frontend/*',
+        ],
         'freedb_site': ['staticfiles/*', 'staticfiles/**/*'],
     },
     install_requires=[
