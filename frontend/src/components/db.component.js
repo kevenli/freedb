@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { Component, Fragment } from "react";
 import FreedbDataService from "../services/freedb.service";
 import Breadcrumb from 'react-bootstrap/Breadcrumb';
 import { Link } from "react-router-dom";
@@ -21,19 +21,19 @@ export default class Tutorial extends Component {
       },
       collections: [],
       message: "",
-      db_name:"",
+      db_name: "",
     };
   }
 
   componentDidMount() {
     this.getTutorial(this.props.match.params.id);
-    this.setState({db_name: this.props.match.params.id});
+    this.setState({ db_name: this.props.match.params.id });
   }
 
   onChangeTitle(e) {
     const title = e.target.value;
 
-    this.setState(function(prevState) {
+    this.setState(function (prevState) {
       return {
         currentDatabase: {
           ...prevState.currentTutorial,
@@ -122,14 +122,8 @@ export default class Tutorial extends Component {
     const { currentDatabase, collections } = this.state;
 
     return (
-      <div>
-        <Breadcrumb>
-          <Breadcrumb.Item href="#">Home</Breadcrumb.Item>
-          <Breadcrumb.Item href="https://getbootstrap.com/docs/4.0/components/breadcrumb/">
-            Library
-          </Breadcrumb.Item>
-          <Breadcrumb.Item active>Data</Breadcrumb.Item>
-        </Breadcrumb>
+      <Fragment>
+        <h1>{currentDatabase.name}</h1>
         <div>
           <Link to={`/databases/${this.state.db_name}/add_collection`} >Add Collection</Link>
           <table>
@@ -138,19 +132,19 @@ export default class Tutorial extends Component {
               <td></td>
             </tr>
             {collections &&
-            collections.map((collection, index)=>(
-              <tr>
-                <td>
-                  <Link to={`/databases/${this.state.currentDatabase.name}/collections/${collection.name}`}>
-                  {collection.name}
-                  </Link>
-                </td>
-                <td></td>
-              </tr>
-            ))}
+              collections.map((collection, index) => (
+                <tr>
+                  <td>
+                    <Link to={`/databases/${this.state.currentDatabase.name}/collections/${collection.name}`}>
+                      {collection.name}
+                    </Link>
+                  </td>
+                  <td></td>
+                </tr>
+              ))}
           </table>
         </div>
-      </div>
+      </Fragment>
     );
   }
 }
