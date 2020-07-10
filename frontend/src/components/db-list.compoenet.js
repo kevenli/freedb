@@ -84,12 +84,12 @@ export default class TutorialsList extends Component {
       });
   }
 
-  deleteDb(db){
+  deleteDb(db) {
     TutorialDataService.deleteDb(db.name)
-      .then(response =>{
+      .then(response => {
         this.refreshList();
       })
-      .catch(e =>{
+      .catch(e => {
         console.log(e);
       });
   }
@@ -119,92 +119,32 @@ export default class TutorialsList extends Component {
             </div>
           </div>
         </div>
-        <div className="col-md-6">
+        <div className="col-md-12">
           <h4>Database List</h4>
           <table className="table">
             <thead>
-            <tr>
-              <td>name</td>
-              <td></td>
-            </tr>
+              <tr>
+                <td>name</td>
+                <td></td>
+              </tr>
             </thead>
             <tbody>
-            {databases &&
-              databases.map((db, index) => (
-                <tr key={db.name}>
-                  <td>
-                    <Link to={`/databases/${db.name}`}>{db.name}</Link>
-                  </td>
-                  <td>
-                    <a href="#" className="btn btn-outline-danger"
-                       onClick={() => this.deleteDb(db)}>
-                      delete
+              {databases &&
+                databases.map((db, index) => (
+                  <tr key={db.name}>
+                    <td>
+                      <Link to={`/databases/${db.name}`}>{db.name}</Link>
+                    </td>
+                    <td>
+                      <a href="#" className="btn btn-outline-danger btn-sm"
+                        onClick={() => this.deleteDb(db)}>
+                        delete
                     </a>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
-
-          <ul className="list-group">
-            {databases &&
-              databases.map((db, index) => (
-                <li
-                  className={
-                    "list-group-item " +
-                    (index === currentIndex ? "active" : "")
-                  }
-                  onClick={() => this.setActiveTutorial(db, index)}
-                  key={index}
-                >
-                  {db.name}
-                </li>
-              ))}
-          </ul>
-
-          <button
-            className="m-3 btn btn-sm btn-danger"
-            onClick={this.removeAllTutorials}
-          >
-            Remove All
-          </button>
-        </div>
-        <div className="col-md-6">
-          {currentTutorial ? (
-            <div>
-              <h4>Tutorial</h4>
-              <div>
-                <label>
-                  <strong>Title:</strong>
-                </label>{" "}
-                {currentTutorial.title}
-              </div>
-              <div>
-                <label>
-                  <strong>Description:</strong>
-                </label>{" "}
-                {currentTutorial.description}
-              </div>
-              <div>
-                <label>
-                  <strong>Status:</strong>
-                </label>{" "}
-                {currentTutorial.published ? "Published" : "Pending"}
-              </div>
-
-              <Link
-                to={"/tutorials/" + currentTutorial.id}
-                className="badge badge-warning"
-              >
-                Edit
-              </Link>
-            </div>
-          ) : (
-            <div>
-              <br />
-              <p>Please click on a Tutorial...</p>
-            </div>
-          )}
         </div>
       </div>
     );
