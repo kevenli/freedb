@@ -15,18 +15,18 @@ class App extends Component{
       <Router>
         <div>
           <nav className="navbar navbar-expand navbar-dark bg-dark">
-            <a href="/tutorials" className="navbar-brand">
-              bezKoder
+            <a href="/" className="navbar-brand">
+              Freedb
             </a>
             <div className="navbar-nav mr-auto">
               <li className="nav-item">
                 <Link to={"/databases"} className="nav-link">
-                  DbList
+                  Databases
                 </Link>
               </li>
               <li className="nav-item">
                 <Link to={"/add_database"} className="nav-link">
-                  AddDb
+                  New Database
                 </Link>
               </li>
             </div>
