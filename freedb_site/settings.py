@@ -92,8 +92,6 @@ TEMPLATES = [
 
 FILE_UPLOAD_HANDLERS = ["django.core.files.uploadhandler.TemporaryFileUploadHandler"]
 
-CORS_ORIGIN_ALLOW_ALL = True
-
 WSGI_APPLICATION = 'freedb_site.wsgi.application'
 
 
