@@ -1,5 +1,4 @@
 import http from "../http-common";
-import Cookies from 'js-cookie';
 
 class FreedbDataService {
     getAllDb(){

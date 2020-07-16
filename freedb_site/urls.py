@@ -23,6 +23,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("o/", include('oauth2_provider.urls', namespace='oauth2_provider')),
     path('accounts/login/', auth_views.LoginView.as_view(template_name='freedb/login.html'), name='login'),
+    path('accounts/logout/', auth_views.LogoutView.as_view(template_name='freedb/logged_out.html'), name='logout'),
     path('', include('frontend.urls')),
     path('', include('freedb.urls')),
 ]+ static(settings.STATIC_URL)

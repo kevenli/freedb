@@ -30,6 +30,11 @@ class App extends Component{
                 </Link>
               </li>
             </div>
+            <ul className="navbar-nav px-3">
+              <li className="nav-item text-nowrap">
+                <a className="nav-link" href="/accounts/logout/">Sign out</a>
+              </li>
+            </ul>
           </nav>
 
           <div className="container mt-3">
