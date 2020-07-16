@@ -146,7 +146,11 @@ export default class CollectionView extends Component {
   }
 
   btnUploadFileClick(){
-    FreedbDataService.uploadDocs(this.state.db_name, this.state.col_name, this.state.uploadFile);
+    FreedbDataService.uploadDocs(this.state.db_name, this.state.col_name, this.state.uploadFile)
+    .then(response=>{
+      this.setState({showImportDataDialog:false});
+      this.queryCollection();
+    });
   }
 
   queryCollection(){

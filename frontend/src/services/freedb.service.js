@@ -33,7 +33,7 @@ class FreedbDataService {
     uploadDocs(db_name, col_name, file){
         var formData = new FormData();
         formData.append("file", file);
-        http.post(`/databases/${db_name}/collections/${col_name}/documents`, formData, {
+        return http.post(`/databases/${db_name}/collections/${col_name}/documents`, formData, {
             headers: {
               'Content-Type': 'multipart/form-data'
             }
