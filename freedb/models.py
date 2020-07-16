@@ -17,6 +17,7 @@ class Database(models.Model):
 class Collection(models.Model):
     database = models.ForeignKey(Database, on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
+    actual_col_name = models.CharField(max_length=50, null=True)
 
     def __str__(self):
         return f'{self.database}.{self.name}'

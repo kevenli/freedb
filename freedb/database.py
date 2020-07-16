@@ -12,6 +12,7 @@ client = MongoClient(settings.MONGODB_URL)
 def get_db_collection(collection) -> Collection:
     #client = MongoClient('mongomock://localhost')
     #client = connect("ddmongo", host=mongodb_url, alias="default")
-    db = client[collection.database.name]
-    col = db[collection.name]
+    db = client.db
+    actual_col_name = collection.actual_col_name or collection.name
+    col = db[actual_col_name]
     return col

@@ -93,6 +93,7 @@ class DatabaseCollectionList(APIView):
     def post(self, request, db_name):
         database = Database.objects.get(owner=request.user, name=db_name)
         collection_name = self.request.data.get('name')
+        
         collection = Collection(database=database, name=collection_name)
         try:
             collection.save()
@@ -101,8 +102,12 @@ class DatabaseCollectionList(APIView):
                 'err_msg': 'collection already exists.'
             })
 
+        actual_col_name = collection_name + '_' + str(collection.id)
         mongo_db = client[database.name]
-        mongo_col = mongo_db[collection.name]
+        mongo_col = mongo_db[actual_col_name]
+
+        collection.actual_col_name = actual_col_name
+        collection.save()
 
         return JsonResponse({})
 
