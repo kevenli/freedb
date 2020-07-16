@@ -4,6 +4,7 @@ import FreedbDataService from "../services/freedb.service";
 import { LinkContainer } from 'react-router-bootstrap'
 import {Card, Button, ButtonGroup, FormText, Form, InputGroup, FormControl, Modal} from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import Table from './table.component';
 
 export default class CollectionView extends Component {
   constructor(props){
@@ -253,6 +254,7 @@ export default class CollectionView extends Component {
           }} className='btn btn-outline-dark'>Next</Link>
         }
       </Breadcrumb>
+      {/* <Table data={docs}></Table> */}
       {docs &&
       docs.map((doc, index) => (
           <Card key={doc.id}>
