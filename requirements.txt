@@ -2,3 +2,5 @@ django
 pymongo
 djangorestframework
 django-cors-headers
+django-oauth-toolkit
+django-cors-middleware

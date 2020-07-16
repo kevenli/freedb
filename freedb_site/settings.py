@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'freedb',
     'corsheaders',
     'frontend',
+    'oauth2_provider',
 ]
 
 MIDDLEWARE = [
