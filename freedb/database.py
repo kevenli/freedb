@@ -15,4 +15,7 @@ def get_db_collection(collection) -> Collection:
     db = client.db
     actual_col_name = collection.actual_col_name or collection.name
     col = db[actual_col_name]
+    if not collection.actual_col_name:
+        collection.actual_col_name = actual_col_name
+        collection.save()
     return col
