@@ -16,3 +16,4 @@ data
 dist
 *.egg-info
 staticfiles
+prod_settings.py
