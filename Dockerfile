@@ -6,7 +6,7 @@ RUN apk add libffi-dev \
 ADD . /app
 WORKDIR /app
 RUN pip install -r requirements.txt
-RUN cd /app && python setup.py install
+#RUN cd /app && python setup.py install
 RUN pip install uwsgi
 WORKDIR /app
 ENV TZ /usr/share/zoneinfo/Etc/UTC

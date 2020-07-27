@@ -1,0 +1,49 @@
+version: "3"
+services:
+  db:
+    image: mariadb
+    volumes:
+      - database:/var/lib/mysql:rw
+    restart: always
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: changeyourstrongpasswordhere
+      MYSQL_DATABASE: freedb
+      MYSQL_USER: freedb
+      MYSQL_PASSWORD: freedb
+      command: --default-authentication-plugin=mysql_native_password character-set-server=utf8 --collation-server=utf8_general_ci
+
+  mongo:
+    image: mongo
+    volumes:
+      - mongodata:/data/db
+    ports:
+      - 27017:27017
+    restart: always
+#    environment:
+#      MONGO_INITDB_ROOT_USERNAME: root
+#      MONGO_INITDB_ROOT_PASSWORD: example
+
+  web:
+    image: freedb
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    volumes:
+      - ./prod_settings.py:/app/prod_settings.py:Z
+    environment:
+      DJANGO_SETTINGS_MODULE: prod_settings
+      DATABASE_URL: mysql://freedb:freedb@localhost/freedb?charset=utf8mb4
+      MONGODB_URL: mongodb://localhost/db
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: imagebank
+      DB_USER: imagebank
+      DB_PASSWORD: imagebankpass
+    network_mode: host
+
+volumes:
+  database:
+  mongodata:
