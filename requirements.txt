@@ -4,3 +4,5 @@ djangorestframework
 django-cors-headers
 django-oauth-toolkit
 django-cors-middleware
+dj_database_url
+pymysql

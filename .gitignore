@@ -134,3 +134,6 @@ data/
 
 node_modules
 .vscode
+
+.vagrant
+staticfiles
