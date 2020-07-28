@@ -6,3 +6,4 @@ django-oauth-toolkit
 django-cors-middleware
 dj_database_url
 pymysql
+dnspython
