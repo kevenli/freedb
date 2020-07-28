@@ -32,6 +32,7 @@ services:
     depends_on:
       - db
     volumes:
+      - ./logs:/app/logs:z
       - ./prod_settings.py:/app/prod_settings.py:Z
     environment:
       DJANGO_SETTINGS_MODULE: prod_settings
