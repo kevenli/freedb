@@ -9,5 +9,6 @@ RUN pip install -r requirements.txt
 RUN pip install uwsgi
 ENV TZ /usr/share/zoneinfo/Etc/UTC
 RUN python manage.py collectstatic --noinput
+RUN chmod +x /app/docker-entrypoint.sh
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["uwsgi", "--ini", "freedb_site/uwsgi.ini"]
