@@ -37,11 +37,6 @@ services:
       DJANGO_SETTINGS_MODULE: prod_settings
       DATABASE_URL: mysql://freedb:freedb@localhost/freedb?charset=utf8mb4
       MONGODB_URL: mongodb://localhost/db
-      DB_HOST: db
-      DB_PORT: 3306
-      DB_NAME: imagebank
-      DB_USER: imagebank
-      DB_PASSWORD: imagebankpass
     network_mode: host
 
 volumes:
