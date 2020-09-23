@@ -18,6 +18,10 @@ from .models import Database, Collection
 from . import models
 from .database import get_db_collection, client
 from .serializers import DatabaseSerializer
+from .utils import snowflake
+
+
+id_generator = snowflake.generator(1,1)
 
 
 logger = logging.getLogger(__name__)
@@ -265,6 +269,7 @@ def save_item(col, doc):
     if doc_id is not None:
         doc['_id'] = str(doc_id)
     doc = {key.lower(): value for key, value in doc.items()}
+    doc['_ts'] = next(id_generator)
     try:
         new_id = col.insert_one(doc).inserted_id
         return str(new_id), 'created'
@@ -313,6 +318,7 @@ class DatabaseCollectionDocumentInstance(APIView):
         doc = col.find_one({"_id": doc_id})
         if not doc:
             return Response(status=404)
+        doc['id'] = str(doc.pop('_id'))
         return Response(doc)
 
     def delete(self, request, db_name, col_name, doc_id):
