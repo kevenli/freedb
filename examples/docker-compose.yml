@@ -29,9 +29,11 @@ services:
     image: kevenli/freedb
     ports:
       - "8000:8000"
+      - "8443:8443"
     depends_on:
       - db
     volumes:
+      - ./ssl:/app/ssl:Z
       - ./logs:/app/logs:z
       - ./prod_settings.py:/app/prod_settings.py:Z
     environment:
@@ -39,6 +41,7 @@ services:
       DATABASE_URL: mysql://freedb:freedb@localhost/freedb?charset=utf8mb4
       MONGODB_URL: mongodb://localhost/db
     network_mode: host
+    command: uwsgi --ini freedb_site/uwsgi.ini --master --https 0.0.0.0:8443,/app/ssl/localhost.crt,/app/ssl/localhost.key
 
 volumes:
   database:

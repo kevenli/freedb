@@ -138,3 +138,6 @@ node_modules
 .vagrant
 staticfiles
 prod_settings.py
+
+dev
+examples/ssl/
