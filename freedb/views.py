@@ -1,3 +1,4 @@
+from enum import Enum
 import json
 import logging
 import os
@@ -262,19 +263,49 @@ class JsonLineItemStream:
         return json.loads(line)
 
 
-def save_item(col, doc):
+
+class SaveExistingPolicy(Enum):
+    SKIP = 1
+    UPDATE = 2
+    OVERWRITE = 3
+
+
+def save_item(col, doc, existing_policy: SaveExistingPolicy = SaveExistingPolicy.SKIP):
     if len(doc) == 0:
         raise Exception("Post data cannot be null.")
     doc_id = doc.get('id')
     if doc_id is not None:
         doc['_id'] = str(doc_id)
-    doc = {key.lower(): value for key, value in doc.items()}
-    doc['_ts'] = next(id_generator)
-    try:
-        new_id = col.insert_one(doc).inserted_id
-        return str(new_id), 'created'
-    except pymongo.errors.DuplicateKeyError:
-        return str(doc['_id']), 'skipped'
+
+    existing = None 
+    if doc_id:
+        existing = col.find_one({'_id': doc_id})
+
+    if existing:
+        if existing_policy == SaveExistingPolicy.SKIP:
+            return doc_id, 'skipped'
+        
+        if existing_policy == SaveExistingPolicy.UPDATE:
+            for k, v in doc.items():
+                existing[k] = v
+            existing['_ts'] = next(id_generator)
+            col.update_one({'_id': doc_id}, existing)
+            return str(doc_id), 'updated'
+
+        if existing_policy == SaveExistingPolicy.OVERWRITE:
+            doc = {key.lower(): value for key, value in doc.items()}
+            col.update_one({'_id': doc_id}, doc)
+            return str(doc_id), 'overwroten'
+
+    
+    else:
+        doc = {key.lower(): value for key, value in doc.items()}
+        doc['_ts'] = next(id_generator)
+        try:
+            new_id = col.insert_one(doc).inserted_id
+            return str(new_id), 'created'
+        except pymongo.errors.DuplicateKeyError:
+            return str(doc['_id']), 'skipped'
 
 
 class DatabaseCollectionDocuments(APIView):
