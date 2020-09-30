@@ -1,0 +1,28 @@
+openapi: 3.0.0
+info: 
+  title: Freedb Api Document
+  version: 0.0.1
+paths:
+  #/databases:
+  #  post:
+  /databases/{db_id}/collections:
+    post:
+      description: Create a new collection
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+            
+      responses:
+        200:
+          description: Collection created sucessfully.
+
+  /databases/{db_id}/collections/{col_id}/docuements/{doc_id}:
+    get:
+      responses:
+        400:
+          description: db_id or col_id does not exists.
