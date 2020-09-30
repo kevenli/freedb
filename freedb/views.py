@@ -316,10 +316,9 @@ class DatabaseCollectionDocuments(APIView):
             collection = models.Collection.objects.get(database=database, name=col_name)
             col = get_db_collection(collection)
         except models.Database.DoesNotExist:
-            #raise APIException('Database does not exist.', 400)
-            return Response(status=400)
+            return JsonResponse(data={'errmsg': 'Database not found.'}, status=400, reason='Database not found.')
         except models.Collection.DoesNotExist:
-            return Response(status=400)
+            return JsonResponse(data={'errmsg': 'Collection not found.'}, status=400, reason='Collection not found.')
 
         stream = None
         if 'file' in request.FILES:
@@ -351,10 +350,9 @@ class DatabaseCollectionDocumentInstance(APIView):
             collection = models.Collection.objects.get(database=database, name=col_name)
             col = get_db_collection(collection)
         except models.Database.DoesNotExist:
-            #raise APIException('Database does not exist.', 400)
-            return Response(status=400)
+            return JsonResponse(data={'errmsg': 'Database not found.'}, status=400, reason='Database not found.')
         except models.Collection.DoesNotExist:
-            return Response(status=400)
+            return JsonResponse(data={'errmsg': 'Collection not found.'}, status=400, reason='Collection not found.')
 
         try:
             doc_id = ObjectId(doc_id)
@@ -367,9 +365,14 @@ class DatabaseCollectionDocumentInstance(APIView):
         return Response(doc)
 
     def delete(self, request, db_name, col_name, doc_id):
-        database = Database.objects.get(owner=self.request.user, name=db_name)
-        collection = Collection.objects.get(database=database, name=col_name)
-        col = get_db_collection(collection)
+        try:
+            database = models.Database.objects.get(owner=self.request.user, name=db_name)
+            collection = models.Collection.objects.get(database=database, name=col_name)
+            col = get_db_collection(collection)
+        except models.Database.DoesNotExist:
+            return JsonResponse(data={'errmsg': 'Database not found.'}, status=400, reason='Database not found.')
+        except models.Collection.DoesNotExist:
+            return JsonResponse(data={'errmsg': 'Collection not found.'}, status=400, reason='Collection not found.')
         try:
             doc_id = ObjectId(doc_id)
         except:
