@@ -11,6 +11,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 import django.db.utils
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.exceptions import APIException
 from bson.json_util import dumps
 from bson import ObjectId
 from bson.errors import InvalidId
@@ -310,9 +311,15 @@ def save_item(col, doc, existing_policy: SaveExistingPolicy = SaveExistingPolicy
 
 class DatabaseCollectionDocuments(APIView):
     def post(self, request, db_name, col_name):
-        database = Database.objects.get(owner=self.request.user, name=db_name)
-        collection = Collection.objects.get(database=database, name=col_name)
-        col = get_db_collection(collection)
+        try:
+            database = models.Database.objects.get(owner=self.request.user, name=db_name)
+            collection = models.Collection.objects.get(database=database, name=col_name)
+            col = get_db_collection(collection)
+        except models.Database.DoesNotExist:
+            #raise APIException('Database does not exist.', 400)
+            return Response(status=400)
+        except models.Collection.DoesNotExist:
+            return Response(status=400)
 
         stream = None
         if 'file' in request.FILES:
@@ -339,9 +346,16 @@ class DatabaseCollectionDocuments(APIView):
 
 class DatabaseCollectionDocumentInstance(APIView):
     def get(self, request, db_name, col_name, doc_id):
-        database = models.Database.objects.get(owner=self.request.user, name=db_name)
-        collection = models.Collection.objects.get(database=database, name=col_name)
-        col = get_db_collection(collection)
+        try:
+            database = models.Database.objects.get(owner=self.request.user, name=db_name)
+            collection = models.Collection.objects.get(database=database, name=col_name)
+            col = get_db_collection(collection)
+        except models.Database.DoesNotExist:
+            #raise APIException('Database does not exist.', 400)
+            return Response(status=400)
+        except models.Collection.DoesNotExist:
+            return Response(status=400)
+
         try:
             doc_id = ObjectId(doc_id)
         except:
