@@ -114,13 +114,61 @@ class DatabaseCollectionDocumentsTest(TestCase):
         self.assertEqual(200, res.status_code)
         res_data = res.json()
         self.assertEqual(20, len(res_data['data']))
-        page_token = res_data['paging']['page_token']
-        while page_token is not None:
-            for doc in res_data['data']:
-                self.assertTrue(doc['_ts'] > last_ts)
-                last_ts = doc['_ts']
             
             
+class DatabaseCollectionDocumentsSyncTest(TestCase):
+    def test_get(self):
+        user, _= User.objects.get_or_create(username='test')
+        db_name = 'DatabaseCollectionDocumentsTest'
+        col_name = 'test_get_paging'
+        self.client.force_login(user)
+        res = self.client.post('/api/databases', data={'name': db_name})
+        self.assertEqual(200, res.status_code)
+
+        res = self.client.post(f'/api/databases/{db_name}/collections', data={'name': col_name})
+        self.assertEqual(200, res.status_code)
+
+        doc = {'id': 1, 'value': 2}
+        res = self.client.post(f'/api/databases/{db_name}/collections/{col_name}/documents',
+                               data=json.dumps(doc), 
+                               content_type='application/json')
+        self.assertEqual(200, res.status_code)
+
+        res = self.client.delete(f'/api/databases/{db_name}/collections/{col_name}/documents')
+        self.assertEqual(200, res.status_code)
+
+        docs = [{
+            'id': i
+        } for i in range(500)]
+        res = self.client.post(f'/api/databases/{db_name}/collections/{col_name}/documents:batchsave', 
+                               data=json.dumps(docs), 
+                               content_type='application/json')
+        self.assertEqual(200, res.status_code)
+
+        def sync_fetch(client, db_name, col_name, page_token=None):
+            url = f'/api/databases/{db_name}/collections/{col_name}/documents:sync'
+            if page_token:
+                url += '?page_token=' + page_token
+            res = client.get(url)
+            return res
+
+        res = sync_fetch(self.client, db_name, col_name)
+        res_data = res.json()
+        page_token = res_data['next_page_token']
+        logger.info(page_token)
+        seen_ids = set()
+        while len(res_data['docs']) > 0:
+            for doc in res_data['docs']:
+                logger.info(doc)
+                logger.debug(seen_ids)
+                self.assertTrue(doc['id'] not in seen_ids)
+                seen_ids.add(doc['id'])
+
+            res = sync_fetch(self.client, db_name, col_name, page_token)
+            res_data = res.json()
+            page_token = res_data['next_page_token']
+
+        self.assertEqual(500, len(seen_ids))
 
 
 class CollectionFieldsTest(TestCase):

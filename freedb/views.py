@@ -1,3 +1,4 @@
+import base64
 from enum import Enum
 import json
 import logging
@@ -444,6 +445,46 @@ class DatabaseCollectionDocumentsBatchSave(APIView):
             })
 
         return Response(ret)
+
+
+class DatabaseCollectionDocumentsSync(APIView):
+    def get(self, request, db_name, col_name):
+        try:
+            database = models.Database.objects.get(owner=self.request.user, name=db_name)
+            collection = models.Collection.objects.get(database=database, name=col_name)
+            mongo_col = get_db_collection(collection)
+        except models.Database.DoesNotExist:
+            return JsonResponse(data={'errmsg': 'Database not found.'}, status=400, reason='Database not found.')
+        except models.Collection.DoesNotExist:
+            return JsonResponse(data={'errmsg': 'Collection not found.'}, status=400, reason='Collection not found.')
+        
+        limit = int(request.GET.get('limit', 20))
+        if limit > 100:
+            limit = 100
+
+        page_token = request.GET.get('page_token')
+
+        last_ts = None
+        query = None
+        if page_token:
+            last_ts = int(base64.b64decode(page_token).decode())
+            query = {'_ts': {'$gt': last_ts}}
+
+        docs = []
+        rows_count = 0
+        sort = [('_ts', 1)]
+        for doc in mongo_col.find(filter=query, limit=limit, sort=sort):
+            docs.append(serialize_doc(doc))
+            rows_count += 1
+        
+        next_page_token = None
+        if docs:
+            next_page_token = base64.b64encode(str(docs[-1]['_ts']).encode()).decode()
+
+        return Response({
+            "docs": docs,
+            'next_page_token': next_page_token or page_token
+        })
 
 
 class DatabaseCollectionDocumentInstance(APIView):
