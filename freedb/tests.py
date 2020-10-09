@@ -1,3 +1,4 @@
+import json
 import logging
 from django.test import TestCase
 from django.contrib.auth.models import User
@@ -50,3 +51,38 @@ class DatabaseCollectionDocumentsTest(TestCase):
         logger.debug(res.content)
         fetched_doc = res.json()
         self.assertIsNotNone(fetched_doc['_ts'])
+
+
+class CollectionFieldsTest(TestCase):
+    def test_post(self):
+        user, _= User.objects.get_or_create(username='test')
+        db_name = 'DatabaseCollectionDocumentsTest'
+        col_name = 'CollectionFieldsTest'
+
+        self.client.force_login(user)
+        res = self.client.post('/api/databases', data={'name': 'DatabaseCollectionDocumentsTest'})
+        self.assertIn(res.status_code, [200, 409])
+
+        res = self.client.post(f'/api/databases/{db_name}/collections', data={'name': col_name})
+        self.assertIn(res.status_code, [200, 409])
+
+        fields = [{
+            'name': 'url',
+            'type': 'string',
+        }]
+        res = self.client.put(f'/api/databases/{db_name}/collections/{col_name}/fields', 
+                              data=json.dumps(fields), content_type='application/json')
+        self.assertEqual(200, res.status_code)
+        self.assertEqual('application/json', res['Content-Type'])
+        fetch_fields = res.json()
+        self.assertEqual(len(fields), len(fetch_fields))
+        self.assertEqual(fields[0]['name'], fetch_fields[0]['name'])
+        self.assertEqual(fields[0]['type'], fetch_fields[0]['type'])
+
+        res = self.client.get(f'/api/databases/{db_name}/collections/{col_name}/fields')
+        self.assertEqual(200, res.status_code)
+        self.assertEqual('application/json', res['Content-Type'])
+        fetch_fields = res.json()
+        self.assertEqual(len(fields), len(fetch_fields))
+        self.assertEqual(fields[0]['name'], fetch_fields[0]['name'])
+        self.assertEqual(fields[0]['type'], fetch_fields[0]['type'])

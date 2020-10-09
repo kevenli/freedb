@@ -22,6 +22,8 @@ urlpatterns = [
          name='api_db_instance'),
     path('api/databases/<str:db_name>/collections', views.DatabaseCollectionList.as_view(),
          name='api_db_collections'),
+    path('api/databases/<str:db_name>/collections/<str:col_name>/fields', views.DatabaseCollectionFieldsView.as_view(),
+         name='api_db_collection_fields'),
     path('api/databases/<str:db_name>/collections/<str:col_name>', views.DatabaseCollectionInstance.as_view(),
          name='api_db_collection'),
     path('api/databases/<str:db_name>/collections/<str:col_name>/documents', views.DatabaseCollectionDocuments.as_view(),

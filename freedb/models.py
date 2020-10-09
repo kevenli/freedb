@@ -14,6 +14,7 @@ class Database(models.Model):
     def __str__(self):
         return f'{self.name}.{self.owner}'
 
+
 class Collection(models.Model):
     database = models.ForeignKey(Database, on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
@@ -26,3 +27,10 @@ class Collection(models.Model):
         unique_together = [
             ['database', 'name'],
         ]
+
+
+class Field(models.Model):
+    collection = models.ForeignKey(Collection, null=False, on_delete=models.CASCADE)
+    field_name = models.CharField(max_length=50)
+    field_type = models.CharField(max_length=30)
+    sort_no = models.IntegerField()

@@ -379,3 +379,49 @@ class DatabaseCollectionDocumentInstance(APIView):
             pass
         result = col.delete_one({"_id": doc_id})
         return Response({"delete_count": result.delete_count})
+
+
+class DatabaseCollectionFieldsView(APIView):
+    def put(self, request, db_name, col_name):
+        try:
+            database = models.Database.objects.get(owner=self.request.user, name=db_name)
+            collection = models.Collection.objects.get(database=database, name=col_name)
+            col = get_db_collection(collection)
+        except models.Database.DoesNotExist:
+            return JsonResponse(data={'errmsg': 'Database not found.'}, status=400, reason='Database not found.')
+        except models.Collection.DoesNotExist:
+            return JsonResponse(data={'errmsg': 'Collection not found.'}, status=400, reason='Collection not found.')
+
+        fields = request.data
+
+        with transaction.atomic():
+            models.Field.objects.filter(collection=collection).delete()
+
+            for i, field in enumerate(fields):
+                field_model = models.Field(collection=collection, 
+                                           field_name=field['name'], 
+                                           field_type=field['type'],
+                                           sort_no=i)
+                field_model.save()
+            
+        saved_fields = [{
+            "name": f.field_name,
+            'type': f.field_type,
+        } for f in models.Field.objects.filter(collection=collection).order_by('sort_no')]
+        return JsonResponse(data=saved_fields, safe=False)
+
+    def get(self, request, db_name, col_name):
+        try:
+            database = models.Database.objects.get(owner=self.request.user, name=db_name)
+            collection = models.Collection.objects.get(database=database, name=col_name)
+            col = get_db_collection(collection)
+        except models.Database.DoesNotExist:
+            return JsonResponse(data={'errmsg': 'Database not found.'}, status=400, reason='Database not found.')
+        except models.Collection.DoesNotExist:
+            return JsonResponse(data={'errmsg': 'Collection not found.'}, status=400, reason='Collection not found.')
+
+        saved_fields = [{
+            "name": f.field_name,
+            'type': f.field_type,
+        } for f in models.Field.objects.filter(collection=collection).order_by('sort_no')]
+        return JsonResponse(data=saved_fields, safe=False)
