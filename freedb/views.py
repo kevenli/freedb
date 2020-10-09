@@ -433,7 +433,7 @@ class DatabaseCollectionDocumentsBatchSave(APIView):
             else:
                 stream = [json.loads(upload_file.read())]
         else:
-            stream = [request.data]
+            stream = request.data
 
         ret = []
         for item in stream:
