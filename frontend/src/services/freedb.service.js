@@ -22,7 +22,7 @@ class FreedbDataService {
     }
 
     queryCollection(db_name, col_name, query={}, skip=0, sort="", limit=20){
-        return http.get(`/databases/${db_name}/collections/${col_name}?query=${JSON.stringify(query)}&skip=${skip}&sort=${sort}&limit=${limit}`)
+        return http.get(`/databases/${db_name}/collections/${col_name}/documents?query=${JSON.stringify(query)}&skip=${skip}&sort=${sort}&limit=${limit}`)
     }
 
     saveDoc(db_name, col_name, data){

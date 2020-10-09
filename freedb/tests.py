@@ -52,6 +52,34 @@ class DatabaseCollectionDocumentsTest(TestCase):
         fetched_doc = res.json()
         self.assertIsNotNone(fetched_doc['_ts'])
 
+    def test_delete(self):
+        user, _= User.objects.get_or_create(username='test')
+        db_name = 'DatabaseCollectionDocumentsTest'
+        col_name = 'test_delete'
+        self.client.force_login(user)
+        res = self.client.post('/api/databases', data={'name': 'DatabaseCollectionDocumentsTest'})
+        self.assertEqual(200, res.status_code)
+
+        res = self.client.post(f'/api/databases/{db_name}/collections', data={'name': col_name})
+        self.assertEqual(200, res.status_code)
+
+        doc = {'id': 1, 'value': 2}
+        res = self.client.post(f'/api/databases/{db_name}/collections/{col_name}/documents',
+                               data=json.dumps(doc), 
+                               content_type='application/json')
+        self.assertEqual(200, res.status_code)
+
+        res = self.client.get(f'/api/databases/{db_name}/collections/{col_name}/documents')
+        self.assertEqual(200, res.status_code)
+        self.assertEqual(1, len(res.json()['data']))
+
+        res = self.client.delete(f'/api/databases/{db_name}/collections/{col_name}/documents')
+        self.assertEqual(200, res.status_code)
+
+        res = self.client.get(f'/api/databases/{db_name}/collections/{col_name}/documents')
+        self.assertEqual(200, res.status_code)
+        self.assertEqual(0, len(res.json()['data']))
+
 
 class CollectionFieldsTest(TestCase):
     def test_post(self):

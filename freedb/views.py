@@ -342,6 +342,109 @@ class DatabaseCollectionDocuments(APIView):
 
         return Response(ret)
 
+    def delete(self, request, db_name, col_name):
+        """
+        Truncate the collection documents.
+        """
+        try:
+            database = models.Database.objects.get(owner=self.request.user, name=db_name)
+            collection = models.Collection.objects.get(database=database, name=col_name)
+            col = get_db_collection(collection)
+        except models.Database.DoesNotExist:
+            return JsonResponse(data={'errmsg': 'Database not found.'}, status=400, reason='Database not found.')
+        except models.Collection.DoesNotExist:
+            return JsonResponse(data={'errmsg': 'Collection not found.'}, status=400, reason='Collection not found.')
+
+        col.truncate()
+        return Response()
+
+    def get(self, request, db_name, col_name):
+        try:
+            database = models.Database.objects.get(owner=self.request.user, name=db_name)
+            collection = models.Collection.objects.get(database=database, name=col_name)
+            col = get_db_collection(collection)
+        except models.Database.DoesNotExist:
+            return JsonResponse(data={'errmsg': 'Database not found.'}, status=400, reason='Database not found.')
+        except models.Collection.DoesNotExist:
+            return JsonResponse(data={'errmsg': 'Collection not found.'}, status=400, reason='Collection not found.')
+
+        mongo_col = col
+        query = json.loads(request.GET.get('query', '{}'))
+        if 'id' in query:
+            try:
+                query["_id"] = ObjectId(query["id"])
+            except:
+                query['_id'] = str(query["id"])
+            finally:
+                query.pop('id')
+
+        limit = int(request.GET.get('limit', 20))
+        skip = int(request.GET.get('skip', 0))
+        try:
+            param_sort = json.loads(request.GET.get('sort', '{}'))
+        except json.decoder.JSONDecodeError:
+            param_sort = {}
+        sort = list(param_sort.items())
+        query_count = mongo_col.count_documents(query)
+        paging = {
+            'limit': limit,
+            'skip': skip,
+            'total': query_count
+        }
+
+        docs = []
+        rows_count = 0
+        for doc in mongo_col.find(filter=query, limit=limit, skip=skip, sort=sort):
+            docs.append(serialize_doc(doc))
+            rows_count += 1
+        paging['rows'] = rows_count
+        return Response({
+            "data": docs,
+            'paging': paging
+        })
+
+
+class DatabaseCollectionDocumentsBatchSave(APIView):
+    def post(self, request, db_name, col_name):
+        try:
+            database = models.Database.objects.get(owner=self.request.user, name=db_name)
+            collection = models.Collection.objects.get(database=database, name=col_name)
+            col = get_db_collection(collection)
+        except models.Database.DoesNotExist:
+            return JsonResponse(data={'errmsg': 'Database not found.'}, status=400, reason='Database not found.')
+        except models.Collection.DoesNotExist:
+            return JsonResponse(data={'errmsg': 'Collection not found.'}, status=400, reason='Collection not found.')
+
+        exist_policy = request.GET.get('exist', 'skip')
+        """
+        exist policies:
+            skip: if the specified id exists, skip current row and return the existing id.
+            update: compare and update modified fields
+            overwrite: overwrite the record with the uploading one.
+        """
+
+        stream = None
+        if 'file' in request.FILES:
+            upload_file = request.FILES['file']
+            upload_ext = os.path.splitext(upload_file.name)[-1]
+            if upload_ext.lower() == '.jl':
+                # json line file
+                stream = JsonLineItemStream(upload_file.temporary_file_path())
+            else:
+                stream = [json.loads(upload_file.read())]
+        else:
+            stream = [request.data]
+
+        ret = []
+        for item in stream:
+            saved_id, result = save_item(col, item)
+            ret.append({
+                "id": saved_id,
+                'result': result
+            })
+
+        return Response(ret)
+
 
 class DatabaseCollectionDocumentInstance(APIView):
     def get(self, request, db_name, col_name, doc_id):
