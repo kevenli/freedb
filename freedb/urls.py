@@ -32,6 +32,8 @@ urlpatterns = [
          name='api_db_collection_docs_batchsave'),
     path('api/databases/<str:db_name>/collections/<str:col_name>/documents:sync', views.DatabaseCollectionDocumentsSync.as_view(),
          name='api_db_collection_docs_sync'),
+    path('api/databases/<str:db_name>/collections/<str:col_name>/documents:import', views.DatabaseCollectionDocumentsImport.as_view(),
+         name='api_db_collection_docs_import'),
     path('api/databases/<str:db_name>/collections/<str:col_name>/documents/<path:doc_id>', 
         views.DatabaseCollectionDocumentInstance.as_view(), name='api_db_collection_doc'),
 

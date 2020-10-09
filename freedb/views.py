@@ -272,10 +272,15 @@ class SaveExistingPolicy(Enum):
     OVERWRITE = 3
 
 
-def save_item(col, doc, existing_policy: SaveExistingPolicy = SaveExistingPolicy.SKIP):
+def save_item(col, doc, id_field=None, existing_policy: SaveExistingPolicy = SaveExistingPolicy.SKIP):
     if len(doc) == 0:
         raise Exception("Post data cannot be null.")
-    doc_id = doc.get('id')
+    
+    if id_field:
+        doc_id = doc.get(id_field)
+    else:
+        doc_id = doc.get('id')
+    
     if doc_id is not None:
         doc['_id'] = str(doc_id)
 
@@ -439,6 +444,44 @@ class DatabaseCollectionDocumentsBatchSave(APIView):
         ret = []
         for item in stream:
             saved_id, result = save_item(col, item)
+            ret.append({
+                "id": saved_id,
+                'result': result
+            })
+
+        return Response(ret)
+
+
+class DatabaseCollectionDocumentsImport(APIView):
+    def post(self, request, db_name, col_name):
+        try:
+            database = models.Database.objects.get(owner=self.request.user, name=db_name)
+            collection = models.Collection.objects.get(database=database, name=col_name)
+            col = get_db_collection(collection)
+        except models.Database.DoesNotExist:
+            return JsonResponse(data={'errmsg': 'Database not found.'}, status=400, reason='Database not found.')
+        except models.Collection.DoesNotExist:
+            return JsonResponse(data={'errmsg': 'Collection not found.'}, status=400, reason='Collection not found.')
+
+        exist_policy = request.GET.get('exist', 'skip')
+
+        stream = None
+        if 'file' not in request.FILES:
+            return JsonResponse(data={'errmsg': 'Not import file found.'}, status=400, reason='Collection not found.')
+
+        id_field = request.GET.get('id_field')
+
+        upload_file = request.FILES['file']
+        upload_ext = os.path.splitext(upload_file.name)[-1]
+        if upload_ext.lower() == '.jl':
+            # json line file
+            stream = JsonLineItemStream(upload_file.temporary_file_path())
+        else:
+            stream = [json.loads(upload_file.read())]
+
+        ret = []
+        for item in stream:
+            saved_id, result = save_item(col, item, id_field=id_field)
             ret.append({
                 "id": saved_id,
                 'result': result
