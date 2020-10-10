@@ -88,6 +88,70 @@ class DatabaseCollectionDocumentsTest(TestCase):
         fetched_doc = res.json()
         self.assertIsNotNone(fetched_doc['_ts'])
 
+    def test_post_merge_none_exist(self):
+        user, _= User.objects.get_or_create(username='test')
+        db_name = 'DatabaseCollectionDocumentsTest'
+        col_name = 'test_post_merge_none_exist'
+
+        self.client.force_login(user)
+        res = self.client.post('/api/databases', data={'name': db_name})
+        self.assertEqual(200, res.status_code)
+
+        res = self.client.post(f'/api/databases/{db_name}/collections', data={'name': col_name})
+        self.assertEqual(200, res.status_code)
+
+        doc = {'id': 'x', 'a': 1}
+        res = self.client.post(f'/api/databases/{db_name}/collections/{col_name}/documents?exist=merge', 
+                               data=doc, 
+                               content_type='application/json')
+        self.assertEqual(200, res.status_code)
+        saved_doc = res.json()
+        new_doc_id = saved_doc['id']
+        self.assertIsNotNone(new_doc_id)
+        self.assertEqual(1, saved_doc['a'])
+        self.assertIsNotNone(saved_doc['_ts'])
+
+        res = self.client.get(f'/api/databases/{db_name}/collections/{col_name}/documents/{new_doc_id}')
+        logger.debug(res.content)
+        fetched_doc = res.json()
+        self.assertIsNotNone(fetched_doc['_ts'])
+
+    def test_post_overwrite(self):
+        user, _= User.objects.get_or_create(username='test')
+        db_name = 'DatabaseCollectionDocumentsTest'
+        col_name = 'test_post_overwrite'
+
+        self.client.force_login(user)
+        res = self.client.post('/api/databases', data={'name': 'DatabaseCollectionDocumentsTest'})
+        self.assertEqual(200, res.status_code)
+
+        res = self.client.post(f'/api/databases/{db_name}/collections', data={'name': col_name})
+        self.assertEqual(200, res.status_code)
+
+        doc = {'id': 'x', 'a': 1}
+        res = self.client.post(f'/api/databases/{db_name}/collections/{col_name}/documents', 
+                               data=doc, 
+                               content_type='application/json')
+        self.assertEqual(200, res.status_code)
+        saved_doc = res.json()
+        new_doc_id = saved_doc['id']
+        self.assertIsNotNone(new_doc_id)
+        self.assertEqual(1, saved_doc['a'])
+
+        doc = {'id': 'x', 'b': 2}
+        res = self.client.post(f'/api/databases/{db_name}/collections/{col_name}/documents?exist=overwrite', 
+                               data=doc, 
+                               content_type='application/json')
+        self.assertEqual(200, res.status_code)
+        saved_doc = res.json()
+        self.assertTrue('a' not in saved_doc)
+        self.assertEqual(2, saved_doc['b'])
+
+        res = self.client.get(f'/api/databases/{db_name}/collections/{col_name}/documents/{new_doc_id}')
+        logger.debug(res.content)
+        fetched_doc = res.json()
+        self.assertIsNotNone(fetched_doc['_ts'])
+
     def test_delete(self):
         user, _= User.objects.get_or_create(username='test')
         db_name = 'DatabaseCollectionDocumentsTest'

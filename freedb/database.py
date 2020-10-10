@@ -69,6 +69,14 @@ class DataCollection:
         update_ret = self.underlying.update_one({'_id': doc_id}, {'$set': doc}, upsert=True)
         return update_ret.upserted_id or doc_id
 
+    def save_overwrite(self, doc):
+        doc_id = doc.get('id')
+        try:
+            doc_id = ObjectId(doc_id)
+        except:
+            pass
+        update_ret = self.underlying.replace_one({'_id': doc_id}, doc, upsert=True)
+        return update_ret.upserted_id or doc_id
 
 def get_db_collection(collection) -> DataCollection:
     #client = MongoClient('mongomock://localhost')

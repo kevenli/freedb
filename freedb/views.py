@@ -294,8 +294,10 @@ def save_item(col, doc, id_field=None, existing_policy: ExistingRowPolicy = Exis
 
         if existing_policy == ExistingRowPolicy.Overwrite:
             doc = {key.lower(): value for key, value in doc.items()}
-            col.update_one({'_id': doc_id}, doc)
-            return str(doc_id), 'overwroten'
+            doc['_ts'] = next(id_generator)
+            
+            #col.update_one({'_id': doc_id}, doc)
+            return col.save_overwrite(doc), 'overwroten'
 
     
     else:
