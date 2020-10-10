@@ -39,6 +39,14 @@ class DataCollection:
     def __init__(self, underlying: Collection):
         self.underlying = underlying
 
+    def get(self, doc_id):
+        try:
+            doc_id = ObjectId(doc_id)
+        except:
+            pass
+
+        return self.underlying.find_one({'_id': doc_id})
+
     def find_one(self, filter=None, *args, **kwargs):
         return self.underlying.find_one(filter, *args, **kwargs)
 

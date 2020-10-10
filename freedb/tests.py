@@ -28,6 +28,40 @@ class ApiDatabasesTest(TestCase):
         self.assertEqual(200, res.status_code)
 
 
+class DatabaseCollectionDocumentInstanceTest(TestCase):
+    def test_delete(self):
+        user, _= User.objects.get_or_create(username='test')
+        db_name = 'DatabaseCollectionDocumentInstanceTest'
+        col_name = 'test_delete'
+
+        self.client.force_login(user)
+        res = self.client.post('/api/databases', data={'name': db_name})
+        self.assertEqual(200, res.status_code)
+
+        res = self.client.post(f'/api/databases/{db_name}/collections', data={'name': col_name})
+        self.assertEqual(200, res.status_code)
+
+        res = self.client.delete(f'/api/databases/{db_name}/collections/{col_name}/documents')
+        self.assertEqual(200, res.status_code)
+
+        res = self.client.delete(f'/api/databases/{db_name}/collections/{col_name}/documents/1')
+        self.assertEqual(404, res.status_code)
+
+        post_doc = {'a':1}
+        res = self.client.post(f'/api/databases/{db_name}/collections/{col_name}/documents', 
+                               data=post_doc, 
+                               content_type='application/json')
+        self.assertEqual(200, res.status_code)
+        new_doc_id = res.json()['id']
+
+        res = self.client.delete(f'/api/databases/{db_name}/collections/{col_name}/documents/{new_doc_id}')
+        self.assertEqual(200, res.status_code)
+
+
+
+
+
+
 class DatabaseCollectionDocumentsTest(TestCase):
     def test_post(self):
         user, _= User.objects.get_or_create(username='test')

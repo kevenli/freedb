@@ -553,8 +553,13 @@ class DatabaseCollectionDocumentInstance(APIView):
             doc_id = ObjectId(doc_id)
         except:
             pass
+
+        doc = col.get(doc_id)
+        if not doc:
+            return JsonResponse(data={'errmsg': 'Document not found.'}, status=404, reason='Document not found.')
+
         result = col.delete_one({"_id": doc_id})
-        return Response({"delete_count": result.delete_count})
+        return Response()
 
 
 class DatabaseCollectionFieldsView(APIView):
