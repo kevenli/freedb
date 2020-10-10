@@ -38,6 +38,18 @@ class FreedbDataService {
             }
         })
     }
+
+    importDocs(db_name, col_name, file, id_field='id'){
+        var formData = new FormData();
+        formData.append("file", file);
+        var config = {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        }
+        return http.post(`/databases/${db_name}/collections/${col_name}/documents:import?id_field=` + id_field, 
+            formData, config)
+    }
 }
 
 export default new FreedbDataService();
