@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='freedb',
-    version='0.0.3',
+    version='0.1.0',
     packages=find_packages(),
     package_data = {
         'frontend': [
