@@ -44,8 +44,44 @@ class DatabaseCollectionDocumentsTest(TestCase):
         doc = {'a': 1}
         res = self.client.post(f'/api/databases/{db_name}/collections/{col_name}/documents', data=doc)
         self.assertEqual(200, res.status_code)
-        new_doc_id = res.json()[0]['id']
+        new_doc_id = res.json()['id']
         self.assertIsNotNone(new_doc_id)
+
+        res = self.client.get(f'/api/databases/{db_name}/collections/{col_name}/documents/{new_doc_id}')
+        logger.debug(res.content)
+        fetched_doc = res.json()
+        self.assertIsNotNone(fetched_doc['_ts'])
+
+    def test_post_merge(self):
+        user, _= User.objects.get_or_create(username='test')
+        db_name = 'DatabaseCollectionDocumentsTest'
+        col_name = 'test_post_merge'
+
+        self.client.force_login(user)
+        res = self.client.post('/api/databases', data={'name': 'DatabaseCollectionDocumentsTest'})
+        self.assertEqual(200, res.status_code)
+
+        res = self.client.post(f'/api/databases/{db_name}/collections', data={'name': col_name})
+        self.assertEqual(200, res.status_code)
+
+        doc = {'id': 'x', 'a': 1}
+        res = self.client.post(f'/api/databases/{db_name}/collections/{col_name}/documents', 
+                               data=doc, 
+                               content_type='application/json')
+        self.assertEqual(200, res.status_code)
+        saved_doc = res.json()
+        new_doc_id = saved_doc['id']
+        self.assertIsNotNone(new_doc_id)
+        self.assertEqual(1, saved_doc['a'])
+
+        doc = {'id': 'x', 'b': 2}
+        res = self.client.post(f'/api/databases/{db_name}/collections/{col_name}/documents?exist=merge', 
+                               data=doc, 
+                               content_type='application/json')
+        self.assertEqual(200, res.status_code)
+        saved_doc = res.json()
+        self.assertEqual(1, saved_doc['a'])
+        self.assertEqual(2, saved_doc['b'])
 
         res = self.client.get(f'/api/databases/{db_name}/collections/{col_name}/documents/{new_doc_id}')
         logger.debug(res.content)

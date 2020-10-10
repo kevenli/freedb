@@ -1,3 +1,4 @@
+from enum import Enum
 import os
 from django.conf import settings
 from pymongo import MongoClient
@@ -8,6 +9,25 @@ from pymongo.collection import Collection
 #connect("ddmongo", host=mongodb_url, alias="default")
 
 client = MongoClient(settings.MONGODB_URL)
+
+
+class ExistingRowPolicy(Enum):
+    Skip = 0,
+    Merge = 1,
+    Overwrite = 2
+
+    @classmethod
+    def from_str(cls, s, raise_error=False):
+        if s == 'skip':
+            return ExistingRowPolicy.Skip
+        elif s == 'merge':
+            return ExistingRowPolicy.Merge
+        elif s == 'overwrite':
+            return ExistingRowPolicy.Overwrite
+        elif raise_error:
+            raise Exception(f'Not supported ExistingRowPolicy: {s}')
+        else:
+            return None
 
 
 class DataCollection:
@@ -39,6 +59,15 @@ class DataCollection:
 
     def find(self, *args, **kwargs):
         return self.underlying.find(*args, **kwargs)
+
+    def merge(self, doc):
+        doc_id = doc.get('id')
+        try:
+            doc_id = ObjectId(doc_id)
+        except:
+            pass
+        update_ret = self.underlying.update_one({'_id': doc_id}, {'$set': doc}, upsert=True)
+        return update_ret.upserted_id or doc_id
 
 
 def get_db_collection(collection) -> DataCollection:

@@ -19,7 +19,7 @@ from bson.errors import InvalidId
 import pymongo
 from .models import Database, Collection
 from . import models
-from .database import get_db_collection, client
+from .database import get_db_collection, client, ExistingRowPolicy
 from .serializers import DatabaseSerializer
 from .utils import snowflake
 
@@ -265,14 +265,7 @@ class JsonLineItemStream:
         return json.loads(line)
 
 
-
-class SaveExistingPolicy(Enum):
-    SKIP = 1
-    UPDATE = 2
-    OVERWRITE = 3
-
-
-def save_item(col, doc, id_field=None, existing_policy: SaveExistingPolicy = SaveExistingPolicy.SKIP):
+def save_item(col, doc, id_field=None, existing_policy: ExistingRowPolicy = ExistingRowPolicy.Skip):
     if len(doc) == 0:
         raise Exception("Post data cannot be null.")
     
@@ -289,17 +282,17 @@ def save_item(col, doc, id_field=None, existing_policy: SaveExistingPolicy = Sav
         existing = col.find_one({'_id': doc_id})
 
     if existing:
-        if existing_policy == SaveExistingPolicy.SKIP:
+        if existing_policy == ExistingRowPolicy.Skip:
             return doc_id, 'skipped'
         
-        if existing_policy == SaveExistingPolicy.UPDATE:
+        if existing_policy == ExistingRowPolicy.Merge:
             for k, v in doc.items():
                 existing[k] = v
             existing['_ts'] = next(id_generator)
-            col.update_one({'_id': doc_id}, existing)
-            return str(doc_id), 'updated'
 
-        if existing_policy == SaveExistingPolicy.OVERWRITE:
+            return col.merge(existing), 'merged'
+
+        if existing_policy == ExistingRowPolicy.Overwrite:
             doc = {key.lower(): value for key, value in doc.items()}
             col.update_one({'_id': doc_id}, doc)
             return str(doc_id), 'overwroten'
@@ -326,27 +319,15 @@ class DatabaseCollectionDocuments(APIView):
         except models.Collection.DoesNotExist:
             return JsonResponse(data={'errmsg': 'Collection not found.'}, status=400, reason='Collection not found.')
 
-        stream = None
-        if 'file' in request.FILES:
-            upload_file = request.FILES['file']
-            upload_ext = os.path.splitext(upload_file.name)[-1]
-            if upload_ext.lower() == '.jl':
-                # json line file
-                stream = JsonLineItemStream(upload_file.temporary_file_path())
-            else:
-                stream = [json.loads(upload_file.read())]
-        else:
-            stream = [request.data]
-
-        ret = []
-        for item in stream:
-            saved_id, result = save_item(col, item)
-            ret.append({
-                "id": saved_id,
-                'result': result
-            })
-
-        return Response(ret)
+        existing_policy = ExistingRowPolicy.from_str(request.GET.get('exist')) or ExistingRowPolicy.Skip
+        item = request.data
+        saved_id, result = save_item(col, item, existing_policy=existing_policy)
+        try:
+            saved_id = ObjectId(saved_id)
+        except:
+            pass
+        saved_doc = col.find_one({'_id': saved_id})
+        return Response(serialize_doc(saved_doc))
 
     def delete(self, request, db_name, col_name):
         """
