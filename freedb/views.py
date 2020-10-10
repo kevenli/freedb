@@ -493,10 +493,14 @@ class DatabaseCollectionDocumentsSync(APIView):
         page_token = request.GET.get('page_token')
 
         last_ts = None
-        query = None
+        query = {
+            '_ts': {
+                "$exists": True
+            }
+        }
         if page_token:
             last_ts = int(base64.b64decode(page_token).decode())
-            query = {'_ts': {'$gt': last_ts}}
+            query['_ts']['$gt'] = last_ts
 
         docs = []
         rows_count = 0
