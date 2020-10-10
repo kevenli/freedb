@@ -155,11 +155,11 @@ class DatabaseCollectionDocumentsSyncTest(TestCase):
         res = sync_fetch(self.client, db_name, col_name)
         res_data = res.json()
         page_token = res_data['next_page_token']
-        logger.info(page_token)
+        logger.debug(page_token)
         seen_ids = set()
         while len(res_data['docs']) > 0:
             for doc in res_data['docs']:
-                logger.info(doc)
+                logger.debug(doc)
                 logger.debug(seen_ids)
                 self.assertTrue(doc['id'] not in seen_ids)
                 seen_ids.add(doc['id'])
@@ -169,6 +169,29 @@ class DatabaseCollectionDocumentsSyncTest(TestCase):
             page_token = res_data['next_page_token']
 
         self.assertEqual(500, len(seen_ids))
+
+    def init_collection(self, col_name):
+        user, _= User.objects.get_or_create(username='test')
+        db_name = 'DatabaseCollectionDocumentsTest'
+        self.client.force_login(user)
+        res = self.client.post('/api/databases', data={'name': db_name})
+        self.assertIn(res.status_code, [200, 409])
+
+        res = self.client.post(f'/api/databases/{db_name}/collections', data={'name': col_name})
+        self.assertIn(res.status_code, [200, 409])
+
+        res = self.client.delete(f'/api/databases/{db_name}/collections/{col_name}/documents')
+        self.assertEqual(200, res.status_code)
+
+    def test_post_no_doc(self):
+        db_name = 'DatabaseCollectionDocumentsTest'
+        col_name = 'test_post_no_doc'
+
+        self.init_collection(col_name)
+
+        res = self.client.get(f'/api/databases/{db_name}/collections/{col_name}/documents:sync')
+        self.assertEqual(200, res.status_code)
+        self.assertEqual(None, res.json()['next_page_token'])
 
 
 class CollectionFieldsTest(TestCase):
