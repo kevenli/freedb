@@ -128,6 +128,9 @@ class DatabaseCollectionDocumentsTest(TestCase):
         res = self.client.post(f'/api/databases/{db_name}/collections', data={'name': col_name})
         self.assertEqual(200, res.status_code)
 
+        res = self.client.delete(f'/api/databases/{db_name}/collections/{col_name}/documents')
+        self.assertEqual(200, res.status_code)
+
         doc = {'id': 'x', 'a': 1}
         res = self.client.post(f'/api/databases/{db_name}/collections/{col_name}/documents', 
                                data=doc, 
@@ -146,6 +149,7 @@ class DatabaseCollectionDocumentsTest(TestCase):
         saved_doc = res.json()
         self.assertTrue('a' not in saved_doc)
         self.assertEqual(2, saved_doc['b'])
+        self.assertIsNotNone(saved_doc['_ts'])
 
         res = self.client.get(f'/api/databases/{db_name}/collections/{col_name}/documents/{new_doc_id}')
         logger.debug(res.content)

@@ -61,7 +61,8 @@ class DataCollection:
         return self.underlying.find(*args, **kwargs)
 
     def merge(self, doc):
-        doc_id = doc.get('id')
+        doc_id = doc.pop('id', None)
+        doc__id = doc.pop('_id', None)
         try:
             doc_id = ObjectId(doc_id)
         except:
@@ -70,7 +71,8 @@ class DataCollection:
         return update_ret.upserted_id or doc_id
 
     def save_overwrite(self, doc):
-        doc_id = doc.get('id')
+        doc_id = doc.pop('id', None)
+        doc__id = doc.pop('_id', None)
         try:
             doc_id = ObjectId(doc_id)
         except:

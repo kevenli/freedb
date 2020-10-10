@@ -446,7 +446,7 @@ class DatabaseCollectionDocumentsImport(APIView):
         except models.Collection.DoesNotExist:
             return JsonResponse(data={'errmsg': 'Collection not found.'}, status=400, reason='Collection not found.')
 
-        exist_policy = request.GET.get('exist', 'skip')
+        existing_policy = ExistingRowPolicy.from_str(request.GET.get('exist')) or ExistingRowPolicy.Skip
 
         stream = None
         if 'file' not in request.FILES:
@@ -464,7 +464,7 @@ class DatabaseCollectionDocumentsImport(APIView):
 
         ret = []
         for item in stream:
-            saved_id, result = save_item(col, item, id_field=id_field)
+            saved_id, result = save_item(col, item, id_field=id_field, existing_policy=existing_policy)
             ret.append({
                 "id": saved_id,
                 'result': result
