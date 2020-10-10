@@ -412,6 +412,8 @@ class DatabaseCollectionDocumentsBatchSave(APIView):
             overwrite: overwrite the record with the uploading one.
         """
 
+        existing_policy = ExistingRowPolicy.from_str(request.GET.get('exist')) or ExistingRowPolicy.Skip
+
         stream = None
         if 'file' in request.FILES:
             upload_file = request.FILES['file']
@@ -426,7 +428,7 @@ class DatabaseCollectionDocumentsBatchSave(APIView):
 
         ret = []
         for item in stream:
-            saved_id, result = save_item(col, item)
+            saved_id, result = save_item(col, item, existing_policy=existing_policy)
             ret.append({
                 "id": saved_id,
                 'result': result
