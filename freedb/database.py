@@ -199,6 +199,12 @@ class DataCollection:
         update_ret = self.underlying.replace_one({'_id': doc_id}, doc, upsert=True)
         return update_ret.upserted_id or doc_id
 
+    def find_one_and_delete(self, filter):
+        return self.underlying.find_one_and_delete(filter=filter)
+
+    def find_one_and_update(self, filter, doc):
+        return self.underlying.find_one_and_update(filter=filter, update=doc)
+
 def get_db_collection(collection) -> DataCollection:
     #client = MongoClient('mongomock://localhost')
     #client = connect("ddmongo", host=mongodb_url, alias="default")
