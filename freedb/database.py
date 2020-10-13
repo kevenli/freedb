@@ -3,12 +3,20 @@ import os
 from django.conf import settings
 from pymongo import MongoClient
 from pymongo.collection import Collection
+from .utils import snowflake
 
 #from mongoengine import connect
 #mongodb_url = os.environ.get('MONGODB_URL', 'mongomock://localhost')
 #connect("ddmongo", host=mongodb_url, alias="default")
 
 client = MongoClient(settings.MONGODB_URL)
+
+
+id_generator = snowflake.generator(1,1)
+
+
+def next_ts():
+    return next(id_generator)
 
 
 class ExistingRowPolicy(Enum):
