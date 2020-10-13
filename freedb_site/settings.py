@@ -171,9 +171,17 @@ LOGGING = {
         },
     },
     'loggers': {
+        '': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        },
         'django': {
             'handlers': ['file'],
             'level': 'DEBUG',
+            'propagate': True,
+        },
+        'freedb': {
+            'level': 'DEBUG' if DEBUG else 'INFO',
             'propagate': True,
         },
     },

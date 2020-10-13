@@ -58,10 +58,6 @@ class DatabaseCollectionDocumentInstanceTest(TestCase):
         self.assertEqual(200, res.status_code)
 
 
-
-
-
-
 class DatabaseCollectionDocumentsTest(TestCase):
     def test_post(self):
         user, _= User.objects.get_or_create(username='test')
@@ -122,17 +118,28 @@ class DatabaseCollectionDocumentsTest(TestCase):
         fetched_doc = res.json()
         self.assertIsNotNone(fetched_doc['_ts'])
 
-    def test_post_merge_none_exist(self):
+    def ensure_login(self):
         user, _= User.objects.get_or_create(username='test')
-        db_name = 'DatabaseCollectionDocumentsTest'
-        col_name = 'test_post_merge_none_exist'
-
         self.client.force_login(user)
+        self.user = user
+
+    def ensure_collection_clear(self, db_name, col_name):
         res = self.client.post('/api/databases', data={'name': db_name})
         self.assertEqual(200, res.status_code)
 
         res = self.client.post(f'/api/databases/{db_name}/collections', data={'name': col_name})
         self.assertEqual(200, res.status_code)
+
+        res = self.client.delete(f'/api/databases/{db_name}/collections/{col_name}/documents')
+        self.assertEqual(200, res.status_code)
+
+    def test_post_merge_none_exist(self):
+        db_name = 'DatabaseCollectionDocumentsTest'
+        col_name = 'test_post_merge_none_exist'
+        
+        self.ensure_login()
+
+        self.ensure_collection_clear(db_name, col_name)
 
         doc = {'id': 'x', 'a': 1}
         res = self.client.post(f'/api/databases/{db_name}/collections/{col_name}/documents?exist=merge', 
@@ -142,13 +149,67 @@ class DatabaseCollectionDocumentsTest(TestCase):
         saved_doc = res.json()
         new_doc_id = saved_doc['id']
         self.assertIsNotNone(new_doc_id)
-        self.assertEqual(1, saved_doc['a'])
+        self.assertEqual(doc['id'], saved_doc['id'])
+        self.assertEqual(doc['a'], saved_doc['a'])
         self.assertIsNotNone(saved_doc['_ts'])
 
         res = self.client.get(f'/api/databases/{db_name}/collections/{col_name}/documents/{new_doc_id}')
         logger.debug(res.content)
         fetched_doc = res.json()
         self.assertIsNotNone(fetched_doc['_ts'])
+
+    def test_post_merge_no_id(self):
+        db_name = 'DatabaseCollectionDocumentsTest'
+        col_name = 'test_post_merge_no_id'
+        
+        self.ensure_login()
+
+        self.ensure_collection_clear(db_name, col_name)
+
+        doc = {'a': 1}
+        res = self.client.post(f'/api/databases/{db_name}/collections/{col_name}/documents?exist=merge', 
+                               data=doc, 
+                               content_type='application/json')
+        self.assertEqual(200, res.status_code)
+        saved_doc = res.json()
+        new_doc_id = saved_doc['id']
+        self.assertIsNotNone(new_doc_id)
+        self.assertEqual(doc['a'], saved_doc['a'])
+        self.assertIsNotNone(saved_doc['_ts'])
+
+        res = self.client.get(f'/api/databases/{db_name}/collections/{col_name}/documents/{new_doc_id}')
+        logger.debug(res.content)
+        fetched_doc = res.json()
+        self.assertIsNotNone(fetched_doc['_ts'])
+        self.assertEqual(doc['a'], fetched_doc['a'])
+
+    def test_post_merge_idempotence(self):
+        db_name = 'DatabaseCollectionDocumentsTest'
+        col_name = 'test_post_merge_idempotence'
+        
+        self.ensure_login()
+
+        self.ensure_collection_clear(db_name, col_name)
+
+        doc = {'id': 'x', 'a': 1}
+        res = self.client.post(f'/api/databases/{db_name}/collections/{col_name}/documents?exist=merge', 
+                               data=doc, 
+                               content_type='application/json')
+        self.assertEqual(200, res.status_code)
+        saved_doc = res.json()
+        new_doc_id = saved_doc['id']
+        self.assertIsNotNone(new_doc_id)
+        self.assertEqual(doc['a'], saved_doc['a'])
+        self.assertIsNotNone(saved_doc['_ts'])
+
+        last_ts = saved_doc['_ts']
+        res = self.client.post(f'/api/databases/{db_name}/collections/{col_name}/documents?exist=merge', 
+                               data=doc, 
+                               content_type='application/json')
+        self.assertEqual(200, res.status_code)
+        saved_doc = res.json()
+        new_ts = saved_doc['_ts']
+        self.assertEqual(last_ts, new_ts)
 
     def test_post_overwrite(self):
         user, _= User.objects.get_or_create(username='test')

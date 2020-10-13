@@ -19,7 +19,7 @@ from bson.errors import InvalidId
 import pymongo
 from .models import Database, Collection
 from . import models
-from .database import get_db_collection, client, ExistingRowPolicy, next_ts
+from .database import get_db_collection, client, ExistingRowPolicy, next_ts, save_item
 from .serializers import DatabaseSerializer
 
 
@@ -259,51 +259,6 @@ class JsonLineItemStream:
     def __next__(self):
         line  = next(self.f)
         return json.loads(line)
-
-
-def save_item(col, doc, id_field=None, existing_policy: ExistingRowPolicy = ExistingRowPolicy.Skip):
-    if len(doc) == 0:
-        raise Exception("Post data cannot be null.")
-    
-    if id_field:
-        doc_id = doc.get(id_field)
-    else:
-        doc_id = doc.get('id')
-    
-    if doc_id is not None:
-        doc['_id'] = str(doc_id)
-
-    existing = None 
-    if doc_id:
-        existing = col.find_one({'_id': doc_id})
-
-    if existing:
-        if existing_policy == ExistingRowPolicy.Skip:
-            return doc_id, 'skipped'
-        
-        if existing_policy == ExistingRowPolicy.Merge:
-            for k, v in doc.items():
-                existing[k] = v
-            existing['_ts'] = next_ts()
-
-            return col.merge(existing), 'merged'
-
-        if existing_policy == ExistingRowPolicy.Overwrite:
-            doc = {key.lower(): value for key, value in doc.items()}
-            doc['_ts'] = next_ts()
-            
-            #col.update_one({'_id': doc_id}, doc)
-            return col.save_overwrite(doc), 'overwroten'
-
-    
-    else:
-        doc = {key.lower(): value for key, value in doc.items()}
-        doc['_ts'] = next_ts()
-        try:
-            new_id = col.insert_one(doc).inserted_id
-            return str(new_id), 'created'
-        except pymongo.errors.DuplicateKeyError:
-            return str(doc['_id']), 'skipped'
 
 
 class DatabaseCollectionDocuments(APIView):

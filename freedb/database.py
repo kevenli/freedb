@@ -1,13 +1,23 @@
 from enum import Enum
+import logging
 import os
+import re
+
+from bson import ObjectId
 from django.conf import settings
 from pymongo import MongoClient
+import pymongo.errors
 from pymongo.collection import Collection
+
 from .utils import snowflake
 
 #from mongoengine import connect
 #mongodb_url = os.environ.get('MONGODB_URL', 'mongomock://localhost')
 #connect("ddmongo", host=mongodb_url, alias="default")
+
+
+logger = logging.getLogger(__name__)
+
 
 client = MongoClient(settings.MONGODB_URL)
 
@@ -36,6 +46,90 @@ class ExistingRowPolicy(Enum):
             raise Exception(f'Not supported ExistingRowPolicy: {s}')
         else:
             return None
+
+
+def iter_doc_items(doc, skip__id=True):
+    """
+    iter field_name: field_value over posted doc.
+    make some data check and regularizations:
+        1. field name must not be start with underscore(_) and be valid to a python variable name.
+        2. field name will not be longger that 64 characters.
+        3. convert field to lower case, so that the field_name will not be case-sensitive
+        4. convert field_value according schema settings.(will implement in the future)
+    """
+    field_name_pattern = '[a-zA-Z][\w_]{0,63}'
+    for field_name, field_value in doc.items():
+        if field_name == '_id':
+            if skip__id:
+                continue
+            yield field_name, field_value
+        elif not re.match(field_name_pattern, field_name):
+            raise Exception('Invalid field name. %s' % field_name)
+
+        field_name = field_name.lower()
+        yield field_name, field_value
+
+
+def save_item(col, doc, id_field=None, existing_policy: ExistingRowPolicy = ExistingRowPolicy.Skip):
+    if len(doc) == 0:
+        raise Exception("Post data cannot be null.")
+    
+    if id_field:
+        doc_id = doc.get(id_field)
+    else:
+        doc_id = doc.get('id')
+    
+    if doc_id is not None:
+        doc['_id'] = str(doc_id)
+
+    existing = None 
+    if doc_id:
+        existing = col.find_one({'_id': doc_id})
+
+    if existing:
+        if existing_policy == ExistingRowPolicy.Skip:
+            return doc_id, 'skipped'
+        
+        if existing_policy == ExistingRowPolicy.Merge:
+            # for k, v in doc.items():
+            #     existing[k] = v
+            # existing['_ts'] = next_ts()
+            update_object = {}
+            changed = False
+            doc_id = doc.pop('id', None) or doc_id 
+            for field_name, field_value in iter_doc_items(doc):
+                if field_name == 'id':
+                    continue
+                update_object[field_name] = field_value
+                logger.debug('Comparing field values: %s: old: %s, new: %s', 
+                             field_name, 
+                             existing.get(field_name), 
+                             field_value)
+                if field_value != existing.get(field_name):
+                    changed = True
+
+            if changed:
+                update_object['_ts'] = next_ts()
+                return col.update(doc_id, update_object), 'merged'
+            else:
+                return existing['id'], 'merged'
+
+        if existing_policy == ExistingRowPolicy.Overwrite:
+            doc = {key.lower(): value for key, value in doc.items()}
+            doc['_ts'] = next_ts()
+            
+            #col.update_one({'_id': doc_id}, doc)
+            return col.save_overwrite(doc), 'overwroten'
+
+    
+    else:
+        doc = {key.lower(): value for key, value in doc.items()}
+        doc['_ts'] = next_ts()
+        try:
+            new_id = col.insert_one(doc).inserted_id
+            return str(new_id), 'created'
+        except pymongo.errors.DuplicateKeyError:
+            return str(doc['_id']), 'skipped'
 
 
 class DataCollection:
@@ -84,6 +178,15 @@ class DataCollection:
         except:
             pass
         update_ret = self.underlying.update_one({'_id': doc_id}, {'$set': doc}, upsert=True)
+        return update_ret.upserted_id or doc_id
+
+    def update(self, doc_id: str, update_doc: dict):
+        try:
+            doc_id = ObjectId(doc_id)
+        except:
+            pass
+
+        update_ret = self.underlying.update_one({'_id': doc_id}, {'$set': update_doc})
         return update_ret.upserted_id or doc_id
 
     def save_overwrite(self, doc):
