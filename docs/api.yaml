@@ -26,3 +26,71 @@ paths:
       responses:
         400:
           description: db_id or col_id does not exists.
+
+  /databases/{db_name}/cpllections/{dol_name}/fields:
+    put:
+      description: Set collection fields schema
+      operationId: PutCollectionFields
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              minItems: 1
+              maxItems: 100
+              items:
+                $ref: '#/components/schemas/Field'
+      responses:
+        200:
+          description: Collection fields updated.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Field'
+        400:
+          description: Invalid parameter
+        401:
+          description: Unauthorized request
+        404:
+          description: Collection not found.
+    get:
+      operationId: GetCollectionFields
+      responses:
+        200:
+          description: Collection fields
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Field'
+        401:
+          description: Unauthorized request
+        404:
+          description: Collection not found.
+        
+components:
+  schemas:
+    Field:
+      type: object
+      required:
+          - field_name
+          - field_type
+      properties:
+        field_name:
+          type: string
+          format: '[a-zA-Z][\w_]{,59}'
+          description: Case insensitive field_name, all field_name will be lower-cased on the server-side
+          uniqueItems: true
+        field_type:
+          type: string
+          enum:
+          - string
+          - int
+          - double
+          - date
+
+
+      
