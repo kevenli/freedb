@@ -274,12 +274,20 @@ class DatabaseCollectionDocuments(APIView):
 
         existing_policy = ExistingRowPolicy.from_str(request.GET.get('exist')) or ExistingRowPolicy.Skip
         item = request.data
+        if hasattr(item, 'dict'):
+            item = item.dict()
+        doc_id = item.get('id')
+        if doc_id:
+            try: 
+                doc_id = ObjectId(doc_id)
+                item['id'] = doc_id
+            except:
+                pass
         saved_id, result = save_item(col, item, existing_policy=existing_policy)
-        try:
-            saved_id = ObjectId(saved_id)
-        except:
-            pass
+        
         saved_doc = col.find_one({'_id': saved_id})
+        if saved_doc is None:
+            logger.error('Saved doc not found. %s %s', saved_id, type(saved_id))
         return Response(serialize_doc(saved_doc))
 
     def delete(self, request, db_name, col_name):
@@ -381,7 +389,7 @@ class DatabaseCollectionDocumentsBatchSave(APIView):
         for item in stream:
             saved_id, result = save_item(col, item, existing_policy=existing_policy)
             ret.append({
-                "id": saved_id,
+                "id": str(saved_id),
                 'result': result
             })
 
@@ -419,7 +427,7 @@ class DatabaseCollectionDocumentsImport(APIView):
         for item in stream:
             saved_id, result = save_item(col, item, id_field=id_field, existing_policy=existing_policy)
             ret.append({
-                "id": saved_id,
+                "id": str(saved_id),
                 'result': result
             })
 
