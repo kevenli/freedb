@@ -86,6 +86,32 @@ class DatabaseCollectionDocumentsTest(TestCase):
         fetched_doc = res.json()
         self.assertIsNotNone(fetched_doc['_ts'])
 
+    def test_post_objectid(self):
+        user, _= User.objects.get_or_create(username='test')
+        db_name = 'DatabaseCollectionDocumentsTest'
+        col_name = 'test_post_objectid'
+
+        self.client.force_login(user)
+        res = self.client.post('/api/databases', data={'name': db_name})
+        self.assertEqual(200, res.status_code)
+
+        res = self.client.post(f'/api/databases/{db_name}/collections', data={'name': col_name})
+        self.assertEqual(200, res.status_code)
+
+        doc_id = '5f941664d3f1dc3c947940d6'
+        doc = {'id': doc_id, 'data': 'abc'}
+        res = self.client.post(f'/api/databases/{db_name}/collections/{col_name}/documents', data=doc)
+        self.assertEqual(200, res.status_code)
+        res_data = res.json()
+        new_doc_id = res_data['id']
+        print(res_data)
+        self.assertEqual(doc_id, new_doc_id)
+
+        res = self.client.get(f'/api/databases/{db_name}/collections/{col_name}/documents/{new_doc_id}')
+        logger.debug(res.content)
+        fetched_doc = res.json()
+        self.assertIsNotNone(fetched_doc['_ts'])
+
     def test_post_merge(self):
         user, _= User.objects.get_or_create(username='test')
         db_name = 'DatabaseCollectionDocumentsTest'

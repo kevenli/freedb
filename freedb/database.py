@@ -79,8 +79,13 @@ def save_item(col, doc, id_field=None, existing_policy: ExistingRowPolicy = Exis
     else:
         doc_id = doc.get('id')
     
-    if doc_id is not None:
-        doc['_id'] = str(doc_id)
+    if doc_id:
+        if not isinstance(doc_id, (str, ObjectId)):
+            doc_id = str(doc_id)
+        doc['_id'] = doc_id
+
+    #if doc_id and not isinstance(doc_id, ObjectId):
+    #    doc['_id'] = str(doc_id)
 
     existing = None 
     if doc_id:
@@ -127,9 +132,9 @@ def save_item(col, doc, id_field=None, existing_policy: ExistingRowPolicy = Exis
         doc['_ts'] = next_ts()
         try:
             new_id = col.insert_one(doc).inserted_id
-            return str(new_id), 'created'
+            return new_id, 'created'
         except pymongo.errors.DuplicateKeyError:
-            return str(doc['_id']), 'skipped'
+            return doc['_id'], 'skipped'
 
 
 class DataCollection:
