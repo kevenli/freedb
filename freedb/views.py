@@ -427,7 +427,7 @@ class DatabaseCollectionDocumentsImport(APIView):
         for item in stream:
             saved_id, result = save_item(col, item, id_field=id_field, existing_policy=existing_policy)
             ret.append({
-                "id": saved_id,
+                "id": str(saved_id),
                 'result': result
             })
 
