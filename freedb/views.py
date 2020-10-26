@@ -114,6 +114,14 @@ class DatabaseCollectionList(APIView):
 
         return JsonResponse({})
 
+    def get(self, request, db_name):
+        database = Database.objects.get(owner=request.user, name=db_name)
+        collections = Collection.objects.filter(database=database)
+
+        return JsonResponse([
+                {"name": x.name} for x in collections
+            ], safe=False)
+
 
 class DatabaseCollectionInstance(APIView):
     def get(self, request, db_name, col_name):
