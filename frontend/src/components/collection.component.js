@@ -1,4 +1,5 @@
 import React, {Component, Fragment} from "react";
+import {withRouter} from 'react-router-dom';
 import Breadcrumb from "react-bootstrap/Breadcrumb";
 import FreedbDataService from "../services/freedb.service";
 import { LinkContainer } from 'react-router-bootstrap'
@@ -6,12 +7,15 @@ import {Card, Button, ButtonGroup, FormText, Form, InputGroup, FormControl, Moda
 import { Link } from 'react-router-dom';
 import Table from './table.component';
 
-export default class CollectionView extends Component {
+class CollectionView extends Component {
   constructor(props){
     super(props);
     this.queryCollection = this.queryCollection.bind(this);
     this.btnNewDocClick = this.btnNewDocClick.bind(this);
     this.btnCancelNewDoc = this.btnCancelNewDoc.bind(this);
+    this.btnDeleteClick = this.btnDeleteClick.bind(this);
+    this.btnDeleteConfirmClick = this.btnDeleteConfirmClick.bind(this);
+    this.btnDeleteCancelClick = this.btnDeleteCancelClick.bind(this);
     this.updateNewDoc = this.updateNewDoc.bind(this);
     this.btnSaveNewDoc = this.btnSaveNewDoc.bind(this);
     this.textQueryChange = this.textQueryChange.bind(this);
@@ -36,7 +40,8 @@ export default class CollectionView extends Component {
       sortStr:"",
       limit:20,
       showImportDataDialog: false,
-      uploadFile: null
+      uploadFile: null, 
+      showDeleteDialog: false
     }
   }
 
@@ -154,6 +159,22 @@ export default class CollectionView extends Component {
     });
   }
 
+  btnDeleteClick(){
+    this.setState({showDeleteDialog: true})
+  }
+
+  btnDeleteConfirmClick(){
+    FreedbDataService.deleteCollection(this.state.db_name, this.state.col_name, this.state.uploadFile)
+      .then(response=>{
+        this.setState({showImportDataDialog:false});
+        this.props.history.push(`/databases/${this.state.db_name}`);
+      });
+  }
+
+  btnDeleteCancelClick(){
+    this.setState({showDeleteDialog: false})
+  }
+
   queryCollection(){
     let query={};
     try{
@@ -197,7 +218,7 @@ export default class CollectionView extends Component {
         <ButtonGroup className="ml-auto px-2" >
           <Button variant="outline-dark" onClick={this.btnImportDataClick}>Import</Button>
           <Button variant="outline-dark" onClick={this.btnNewDocClick}>New Doc</Button>
-          <Button variant="outline-dark">Delete Collection</Button>
+          <Button variant="outline-dark" onClick={this.btnDeleteClick}>Delete Collection</Button>
         </ButtonGroup>
       </Breadcrumb>
       {this.state.showNewDocView &&
@@ -209,6 +230,18 @@ export default class CollectionView extends Component {
             <Button onClick={this.btnCancelNewDoc}>Cancel</Button>
           </Form>
       }
+      <Modal show={this.state.showDeleteDialog} onHide={()=>this.setState({showDeleteDialog:false})}>
+        <Modal.Header closeButton>
+          <Modal.Title>Deleting Collection</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>Warning: deleting collection.</p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={()=>this.setState({showDeleteDialog:false})}>Close</Button>
+          <Button variant="primary" onClick={this.btnDeleteConfirmClick}>Confirm</Button>
+        </Modal.Footer>
+      </Modal>
       <Fragment>
         <Form>
           <Form.Row>
@@ -286,3 +319,5 @@ export default class CollectionView extends Component {
     </div>
   }
 }
+
+export default withRouter(CollectionView);

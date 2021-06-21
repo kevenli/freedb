@@ -19,7 +19,7 @@ from bson.errors import InvalidId
 import pymongo
 from .models import Database, Collection
 from . import models
-from .database import get_db_collection, client, ExistingRowPolicy, next_ts, save_item
+from .database import get_db_collection, client, ExistingRowPolicy, next_ts, save_item, delete_db_collection
 from .serializers import DatabaseSerializer
 
 
@@ -120,6 +120,14 @@ class DatabaseCollectionList(APIView):
 
         return JsonResponse({})
 
+    def get(self, request, db_name):
+        database = Database.objects.get(owner=request.user, name=db_name)
+        collections = Collection.objects.filter(database=database)
+
+        return JsonResponse([
+                {"name": x.name} for x in collections
+            ], safe=False)
+
 
 class DatabaseCollectionInstance(APIView):
     def get(self, request, db_name, col_name):
@@ -165,6 +173,19 @@ class DatabaseCollectionInstance(APIView):
             "data": docs,
             'paging': paging
         })
+
+    def delete(self, request, db_name, col_name):
+        try:
+            database = models.Database.objects.get(owner=request.user, name=db_name)
+        except models.Database.DoesNotExist:
+            return Response(status=404)
+        try:
+            collection = models.Collection.objects.get(database=database, name=col_name)
+        except models.Collection.DoesNotExist:
+            return Response(status=404)
+        delete_db_collection(collection)
+        collection.delete()
+        return Response({})
 
 
 class DatabaseIndex(LoginRequiredMixin, ListView):

@@ -221,3 +221,8 @@ def get_db_collection(collection) -> DataCollection:
         collection.save()
 
     return DataCollection(col)
+
+def delete_db_collection(collection):
+    db = client.db
+    actual_col_name = collection.actual_col_name or collection.name
+    db.drop_collection(actual_col_name)
