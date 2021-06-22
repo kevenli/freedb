@@ -567,6 +567,26 @@ class DatabaseCollectionDocumentInstance(APIView):
             logger.error('Saved doc not found. %s %s', saved_id, type(saved_id))
         return Response(serialize_doc(saved_doc))
 
+    def patch(self, request, db_name, col_name, doc_id):
+        try:
+            database = models.Database.objects.get(owner=self.request.user, name=db_name)
+            collection = models.Collection.objects.get(database=database, name=col_name)
+            col = get_db_collection(collection)
+        except models.Database.DoesNotExist:
+            return JsonResponse(data={'errmsg': 'Database not found.'}, status=400, reason='Database not found.')
+        except models.Collection.DoesNotExist:
+            return JsonResponse(data={'errmsg': 'Collection not found.'}, status=400, reason='Collection not found.')
+
+        existing_policy = ExistingRowPolicy.Merge
+        item = dict(request.data)
+        item['id'] = doc_id
+        saved_id, result = save_item(col, item, existing_policy=existing_policy)
+        
+        saved_doc = col.find_one({'_id': saved_id})
+        if saved_doc is None:
+            logger.error('Saved doc not found. %s %s', saved_id, type(saved_id))
+        return Response(serialize_doc(saved_doc))
+
 
 class DatabaseCollectionFieldsView(APIView):
     def put(self, request, db_name, col_name):
