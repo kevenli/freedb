@@ -372,6 +372,52 @@ class DatabaseCollectionDocuments(APIView):
             'paging': paging
         })
 
+    def head(self, request, db_name, col_name):
+        try:
+            database = models.Database.objects.get(owner=self.request.user, name=db_name)
+            collection = models.Collection.objects.get(database=database, name=col_name)
+            col = get_db_collection(collection)
+        except models.Database.DoesNotExist:
+            return JsonResponse(data={'errmsg': 'Database not found.'}, status=400, reason='Database not found.')
+        except models.Collection.DoesNotExist:
+            return JsonResponse(data={'errmsg': 'Collection not found.'}, status=400, reason='Collection not found.')
+
+        mongo_col = col
+        query = json.loads(request.GET.get('query', '{}'))
+        if 'id' in query:
+            try:
+                query["_id"] = ObjectId(query["id"])
+            except:
+                query['_id'] = str(query["id"])
+            finally:
+                query.pop('id')
+
+        limit = int(request.GET.get('limit', 20))
+        skip = int(request.GET.get('skip', 0))
+        try:
+            param_sort = json.loads(request.GET.get('sort', '{}'))
+        except json.decoder.JSONDecodeError:
+            param_sort = {}
+        sort = list(param_sort.items())
+        query_count = mongo_col.count_documents(query)
+        paging = {
+            'limit': limit,
+            'skip': skip,
+            'total': query_count
+        }
+
+        docs = []
+        rows_count = 0
+        projection = {'id': 1, '_ts': 1}
+        for doc in mongo_col.find(filter=query, limit=limit, skip=skip, sort=sort, projection=projection):
+            docs.append(serialize_doc(doc))
+            rows_count += 1
+        paging['rows'] = rows_count
+        return Response({
+            "data": docs,
+            'paging': paging
+        })
+
 
 class DatabaseCollectionDocumentsBatchSave(APIView):
     def post(self, request, db_name, col_name):

@@ -456,3 +456,12 @@ class CollectionFieldsTest(TestCase):
         self.assertEqual(len(fields), len(fetch_fields))
         self.assertEqual(fields[0]['name'], fetch_fields[0]['name'])
         self.assertEqual(fields[0]['type'], fetch_fields[0]['type'])
+
+
+class DatabaseCollectionDocumentsTest(TestCase):
+    def test_head(self):
+        user, _= User.objects.get_or_create(username='test')
+        db_name = 'DatabaseCollectionDocumentsTest'
+        col_name = 'CollectionFieldsTest'
+        res = self.client.head(f'/api/databases/{db_name}/collections/{col_name}/fields')
+        self.assertIsNotNone(res)
