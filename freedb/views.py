@@ -525,6 +525,28 @@ class DatabaseCollectionDocumentInstance(APIView):
             return Response(status=404)
         doc['id'] = str(doc.pop('_id'))
         return Response(doc)
+    
+    def head(self, request, db_name, col_name, doc_id):
+        try:
+            database = models.Database.objects.get(owner=self.request.user, name=db_name)
+            collection = models.Collection.objects.get(database=database, name=col_name)
+            col = get_db_collection(collection)
+        except models.Database.DoesNotExist:
+            return JsonResponse(data={'errmsg': 'Database not found.'}, status=400, reason='Database not found.')
+        except models.Collection.DoesNotExist:
+            return JsonResponse(data={'errmsg': 'Collection not found.'}, status=400, reason='Collection not found.')
+
+        try:
+            doc_id = ObjectId(doc_id)
+        except:
+            pass
+        doc = col.find_one({"_id": doc_id}, projection={'id', '_ts'})
+        if not doc:
+            return Response(status=404)
+        doc['id'] = str(doc.pop('_id'))
+        res = Response('doc')
+        res.headers['X-Freedb-TS'] = doc.get('_ts')
+        return res
 
     def delete(self, request, db_name, col_name, doc_id):
         try:
