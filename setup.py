@@ -7,7 +7,7 @@ def read_requirements():
 
 setup(
     name='freedb',
-    version='0.1.1',
+    version='0.2.0',
     packages=find_packages(),
     package_data = {
         'frontend': [
