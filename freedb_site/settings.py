@@ -133,7 +133,7 @@ LOGIN_REDIRECT_URL = '/'
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
 
-MONGODB_URL = 'localhost'
+MONGODB_URL = os.environ.get('MONGODB_URL', 'localhost')
 
 LANGUAGE_CODE = 'en-us'
 
