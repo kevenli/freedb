@@ -1,14 +1,43 @@
-FROM python:3.8.1-alpine3.11
+FROM python:3.9.5-slim-buster AS app
+# template from https://github.com/nickjj/docker-django-example
 
-RUN apk add libffi-dev \
-    openssl-dev gcc libc-dev make libxml2-dev libxslt-dev \
-    tzdata jpeg-dev zlib-dev freetype-dev lcms2-dev openjpeg-dev tiff-dev tk-dev tcl-dev
-ADD . /app/
 WORKDIR /app
-RUN pip install -r requirements.txt
-RUN pip install uwsgi
-ENV TZ /usr/share/zoneinfo/Etc/UTC
-RUN python manage.py collectstatic --noinput
-RUN chmod +x /app/docker-entrypoint.sh
-ENTRYPOINT ["/app/docker-entrypoint.sh"]
-CMD ["uwsgi", "--ini", "freedb_site/uwsgi.ini"]
+
+RUN apt-get update \
+  && apt-get install -y build-essential curl libpq-dev --no-install-recommends \
+  && rm -rf /var/lib/apt/lists/* /usr/share/doc /usr/share/man \
+  && apt-get clean \
+  && useradd --create-home python \
+  && mkdir -p /public_collected public \
+  && chown python:python -R /public_collected /app
+
+USER python
+
+COPY --chown=python:python requirements*.txt ./
+#COPY --chown=python:python bin/ ./bin
+
+#RUN chmod 0755 bin/* && bin/pip3-install
+RUN pip install -r requirements.txt 
+
+ARG DEBUG="false"
+ENV DEBUG="${DEBUG}" \
+    PYTHONUNBUFFERED="true" \
+    PYTHONPATH="." \
+    PATH="${PATH}:/home/python/.local/bin" \
+    USER="python"
+
+# COPY --chown=python:python --from=webpack /app/public /public
+COPY --chown=python:python . .
+
+WORKDIR /app
+
+RUN if [ "${DEBUG}" = "false" ]; then \
+  SECRET_KEY=dummyvalue python3 manage.py collectstatic --no-input; \
+    else mkdir -p /app/public_collected; fi
+
+RUN chmod +x docker/*
+ENTRYPOINT ["/app/docker/docker-entrypoint.sh"]
+
+EXPOSE 8000
+
+CMD ["gunicorn", "-c", "python:freedb_site.gunicorn", "freedb_site.wsgi"]
