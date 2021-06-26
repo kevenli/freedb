@@ -13,5 +13,5 @@ set -e
 # cp -a /public_collected /app
 python manage.py collectstatic --noinput
 python manage.py migrate
-
+nginx
 exec "$@"

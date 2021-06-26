@@ -4,16 +4,17 @@ FROM python:3.9.5-slim-buster AS app
 WORKDIR /app
 
 RUN apt-get update \
-  && apt-get install -y build-essential curl libpq-dev --no-install-recommends \
+  && apt-get install -y build-essential curl libpq-dev nginx --no-install-recommends \
   && rm -rf /var/lib/apt/lists/* /usr/share/doc /usr/share/man \
   && apt-get clean \
   && useradd --create-home python \
   && mkdir -p /public_collected public \
   && chown python:python -R /public_collected /app
 
-USER python
+# USER python
 
 COPY --chown=python:python requirements*.txt ./
+COPY docker/nginx.conf /etc/nginx/conf.d/nginx.conf
 #COPY --chown=python:python bin/ ./bin
 
 #RUN chmod 0755 bin/* && bin/pip3-install
