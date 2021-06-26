@@ -92,6 +92,12 @@ class DatabaseInstance(APIView):
 
 
 class DatabaseCollectionList(APIView):
+    def get(self, request, db_name):
+        database = Database.objects.get(owner=request.user, name=db_name)
+        collections = Collection.objects.filter(database=database)
+        res = [{"name": col.name} for col in collections]
+        return JsonResponse({'data': res})
+
     @transaction.atomic
     def post(self, request, db_name):
         database = Database.objects.get(owner=request.user, name=db_name)
@@ -565,6 +571,28 @@ class DatabaseCollectionDocumentInstance(APIView):
             return Response(status=404)
         doc['id'] = str(doc.pop('_id'))
         return Response(doc)
+    
+    def head(self, request, db_name, col_name, doc_id):
+        try:
+            database = models.Database.objects.get(owner=self.request.user, name=db_name)
+            collection = models.Collection.objects.get(database=database, name=col_name)
+            col = get_db_collection(collection)
+        except models.Database.DoesNotExist:
+            return JsonResponse(data={'errmsg': 'Database not found.'}, status=400, reason='Database not found.')
+        except models.Collection.DoesNotExist:
+            return JsonResponse(data={'errmsg': 'Collection not found.'}, status=400, reason='Collection not found.')
+
+        try:
+            doc_id = ObjectId(doc_id)
+        except:
+            pass
+        doc = col.find_one({"_id": doc_id}, projection={'id', '_ts'})
+        if not doc:
+            return Response(status=404)
+        doc['id'] = str(doc.pop('_id'))
+        res = Response('doc')
+        res.headers['X-Freedb-TS'] = doc.get('_ts')
+        return res
 
     def delete(self, request, db_name, col_name, doc_id):
         try:
@@ -586,6 +614,46 @@ class DatabaseCollectionDocumentInstance(APIView):
 
         result = col.delete_one({"_id": doc_id})
         return Response()
+
+    def put(self, request, db_name, col_name, doc_id):
+        try:
+            database = models.Database.objects.get(owner=self.request.user, name=db_name)
+            collection = models.Collection.objects.get(database=database, name=col_name)
+            col = get_db_collection(collection)
+        except models.Database.DoesNotExist:
+            return JsonResponse(data={'errmsg': 'Database not found.'}, status=400, reason='Database not found.')
+        except models.Collection.DoesNotExist:
+            return JsonResponse(data={'errmsg': 'Collection not found.'}, status=400, reason='Collection not found.')
+
+        existing_policy = ExistingRowPolicy.Overwrite
+        item = dict(request.data)
+        item['id'] = doc_id
+        saved_id, result = save_item(col, item, existing_policy=existing_policy)
+        
+        saved_doc = col.find_one({'_id': saved_id})
+        if saved_doc is None:
+            logger.error('Saved doc not found. %s %s', saved_id, type(saved_id))
+        return Response(serialize_doc(saved_doc))
+
+    def patch(self, request, db_name, col_name, doc_id):
+        try:
+            database = models.Database.objects.get(owner=self.request.user, name=db_name)
+            collection = models.Collection.objects.get(database=database, name=col_name)
+            col = get_db_collection(collection)
+        except models.Database.DoesNotExist:
+            return JsonResponse(data={'errmsg': 'Database not found.'}, status=400, reason='Database not found.')
+        except models.Collection.DoesNotExist:
+            return JsonResponse(data={'errmsg': 'Collection not found.'}, status=400, reason='Collection not found.')
+
+        existing_policy = ExistingRowPolicy.Merge
+        item = dict(request.data)
+        item['id'] = doc_id
+        saved_id, result = save_item(col, item, existing_policy=existing_policy)
+        
+        saved_doc = col.find_one({'_id': saved_id})
+        if saved_doc is None:
+            logger.error('Saved doc not found. %s %s', saved_id, type(saved_id))
+        return Response(serialize_doc(saved_doc))
 
 
 class DatabaseCollectionFieldsView(APIView):
