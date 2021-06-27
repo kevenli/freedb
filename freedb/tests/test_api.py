@@ -46,6 +46,9 @@ class ApiTest(TestCase):
                 doc = json.loads(line)
                 docs.append(doc)
 
+        for doc in docs:
+            client.post(self.build_api_collection_documents_url(collection), data=doc, format='json')
+
         response = client.get(self.build_api_collection_documents_url(collection))
         response_data = json.loads(response.content)['data']
         def remove_system_fields(doc):
