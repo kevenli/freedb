@@ -355,6 +355,9 @@ class DatabaseCollectionDocuments(APIView):
 
         limit = int(request.GET.get('limit', 20))
         skip = int(request.GET.get('skip', 0))
+        fields = None
+        if 'fields' in request.GET:
+            fields = request.GET.get('fields', '').split(',')
         try:
             param_sort = json.loads(request.GET.get('sort', '{}'))
         except json.decoder.JSONDecodeError:
@@ -369,7 +372,11 @@ class DatabaseCollectionDocuments(APIView):
 
         docs = []
         rows_count = 0
-        for doc in mongo_col.find(filter=query, limit=limit, skip=skip, sort=sort):
+        projection = None
+        if fields:
+            projection = {field: 1 for field in fields}
+            projection['_id'] = 1
+        for doc in mongo_col.find(filter=query, limit=limit, skip=skip, sort=sort, projection=projection):
             docs.append(serialize_doc(doc))
             rows_count += 1
         paging['rows'] = rows_count
