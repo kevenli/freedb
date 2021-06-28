@@ -299,7 +299,7 @@ class DatabaseCollectionDocuments(APIView):
         except models.Collection.DoesNotExist:
             return JsonResponse(data={'errmsg': 'Collection not found.'}, status=400, reason='Collection not found.')
 
-        existing_policy = ExistingRowPolicy.from_str(request.GET.get('exist')) or ExistingRowPolicy.Skip
+        existing_policy = ExistingRowPolicy.from_str(request.GET.get('exist'), True) or ExistingRowPolicy.Skip
         item = request.data
         if hasattr(item, 'dict'):
             item = item.dict()

@@ -36,6 +36,9 @@ class ExistingRowPolicy(Enum):
 
     @classmethod
     def from_str(cls, s, raise_error=False):
+        if s is None:
+            return None
+            
         if s == 'skip':
             return ExistingRowPolicy.Skip
         elif s == 'merge':
