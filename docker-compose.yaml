@@ -3,7 +3,7 @@ services:
   web:
     image: kevenli/freedb:develop
     volumes:
-      - ./db.sqlite3:/app/db.sqlite3:Z
+      - ./data:/app/data:z
     ports:
       - 8000:81
     depends_on:

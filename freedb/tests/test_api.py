@@ -44,7 +44,7 @@ class CollectionTestMixin:
         return col
 
 
-class ApiTest(ApiTestBase):
+class ApiTest(CollectionTestMixin, ApiTestBase):
     def test_query_docs(self):
         collection = self.try_create_collection('testdb', 'testcol')
 
