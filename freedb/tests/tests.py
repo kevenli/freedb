@@ -6,24 +6,26 @@ from rest_framework.test import APIRequestFactory
 from rest_framework.test import force_authenticate
 from freedb import views
 
-
 User = get_user_model()
-
-
-factory = APIRequestFactory()
-user, _= User.objects.get_or_create(username='test')
-user.save()
-user.refresh_from_db()
-
-
 logger = logging.getLogger(__name__)
 
 
-class ApiDatabasesTest(TestCase):
+class WebTestBase(TestCase):
+    def setUp(self):
+        factory = APIRequestFactory()
+        user, _= User.objects.get_or_create(username='test')
+        user.save()
+        user.refresh_from_db()
+
+        self.factory = factory
+        self.user = user
+
+
+class ApiDatabasesTest(WebTestBase):
     def test_post_databases(self):
         user, _= User.objects.get_or_create(username='test')
 
-        request = factory.post('/api/databases', data={'name': 'ApiDatabasesTest'})
+        request = self.factory.post('/api/databases', data={'name': 'ApiDatabasesTest'})
         force_authenticate(request, user=user)
         view = views.DatabaseList.as_view()
         #self.client
@@ -32,7 +34,7 @@ class ApiDatabasesTest(TestCase):
         self.assertEqual(200, res.status_code)
 
 
-class DatabaseCollectionDocumentInstanceTest(TestCase):
+class DatabaseCollectionDocumentInstanceTest(WebTestBase):
     def test_delete(self):
         user, _= User.objects.get_or_create(username='test')
         db_name = 'DatabaseCollectionDocumentInstanceTest'
