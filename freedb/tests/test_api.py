@@ -10,6 +10,7 @@ from rest_framework.test import APIClient
 from rest_framework.authtoken.models import Token
 
 from freedb.models import Database, Collection
+from freedb.database import delete_db_collection
 User = get_user_model()
 
 logger = logging.getLogger(__name__)
@@ -41,10 +42,29 @@ class CollectionTestMixin:
         return col
 
 
-class ApiTest(CollectionTestMixin, ApiTestBase):
-    def test_query_docs(self):
-        collection = self.try_create_collection('testdb', 'testcol')
+class CollectionTestBase(CollectionTestMixin, ApiTestBase):
+    db_name = 'test'
+    col_name = 'CollectionTestBase'
+    collection = None
 
+    def setUp(self):
+        super().setUp()
+        if self.db_name and self.col_name:
+            self.collection = self.try_create_collection(self.db_name, self.col_name)
+    
+    def tearDown(self):
+        if self.collection:
+            logger.debug('deleting collection')
+            delete_db_collection(self.collection)
+            self.collection.delete()
+            self.collection = None
+
+
+class ApiTest(CollectionTestBase):
+    col_name = 'testcol'
+
+    def test_query_docs(self):
+        collection = self.collection
         client = self.client
 
         docs = []
@@ -66,8 +86,7 @@ class ApiTest(CollectionTestMixin, ApiTestBase):
         self.assertEqual(docs, list(map(remove_system_fields, response_data)))
 
     def test_query_docs_by_fields(self):
-        collection = self.try_create_collection('testdb', 'testcol')
-
+        collection = self.collection
         client = self.client
 
         docs = []
@@ -107,16 +126,19 @@ class DocmentsApiTestMixin(CollectionTestMixin):
         return ret
 
 
-class DocumentApiTest(DocmentsApiTestMixin, ApiTestBase):
+class DocumentsTestBase(DocmentsApiTestMixin, CollectionTestBase):
+    pass
+
+
+class DocumentApiTest(DocumentsTestBase):
     def test_post_doc(self):
-        collection = self.try_create_collection('DocmentsApiTest', 'test_post_doc')
+        collection = self.collection
         doc = {'id': 1, 'data': 'some data before update'}
 
         save_res = self.client.post(self.build_documents_url(collection), data=doc, format='json')
         saved_obj = save_res.json()
         self.assertEqual('1', saved_obj['id'])
 
-    @skip("Cannot pass, fix later")
     def test_post_doc_exist_skip(self):
         doc_id = '1'
         collection = self.try_create_collection('DocmentsApiTest', 'test_post_doc_exist_skip')
@@ -132,19 +154,19 @@ class DocumentApiTest(DocmentsApiTestMixin, ApiTestBase):
         final_doc = self.client.get(self.build_document_url(collection, doc_id)).json()
         self.assertEqual(final_doc['data'], doc['data'])
 
-    @skip
     def test_post_doc_exist_overwrite(self):
-        collection = self.try_create_collection('DocmentsApiTest', 'test_post_doc_exist_skip')
-        doc = {'id': 1, 'data': 'some data before update'}
+        doc_id = '1'
+        collection = self.collection
+        doc = {'id': doc_id, 'data': 'some data before update'}
 
         save_res = self.client.post(self.build_documents_url(collection), data=doc, format='json')
         saved_obj = save_res.json()
-        self.assertEqual('1', saved_obj['id'])
+        self.assertEqual(doc_id, saved_obj['id'])
 
-        update_doc = {'id': 1, 'data': 'after update'}
+        update_doc = {'id': doc_id, 'data': 'after update'}
         save_res2 = self.client.post(self.build_documents_url(collection, exist='overwrite'), data=update_doc, format='json')
 
-        final_doc = self.client.get(self.build_document_url(collection, '1')).json()
+        final_doc = self.client.get(self.build_document_url(collection, doc_id)).json()
         self.assertEqual(final_doc['data'], update_doc['data'])
 
     def test_post_doc_exist_merge(self):
