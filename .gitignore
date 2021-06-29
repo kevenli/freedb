@@ -134,6 +134,7 @@ data/
 
 node_modules
 .vscode
+.theia
 
 .vagrant
 staticfiles
