@@ -20,14 +20,11 @@ class ApiTestBase(TestCase):
         super().setUp()
         User = get_user_model()
         tester, _= User.objects.get_or_create(username='tester')
-        tester.save()
         self.user = tester
 
         token, _ = Token.objects.get_or_create(user=tester)
-        token.save()
-        self.token = token
         client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
+        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
         self.client = client
 
 
@@ -48,8 +45,7 @@ class ApiTest(CollectionTestMixin, ApiTestBase):
     def test_query_docs(self):
         collection = self.try_create_collection('testdb', 'testcol')
 
-        client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
+        client = self.client
 
         docs = []
         with open(os.path.join(os.path.dirname(__file__), 'example.jl')) as f:
@@ -72,8 +68,7 @@ class ApiTest(CollectionTestMixin, ApiTestBase):
     def test_query_docs_by_fields(self):
         collection = self.try_create_collection('testdb', 'testcol')
 
-        client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
+        client = self.client
 
         docs = []
         with open(os.path.join(os.path.dirname(__file__), 'example.jl')) as f:
