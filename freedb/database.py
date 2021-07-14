@@ -73,6 +73,15 @@ def iter_doc_items(doc, skip__id=True):
         yield field_name, field_value
 
 
+def is_valid_field_name(f):
+    return re.match('[a-zA-Z][A-Za-z0-9_]{0,35}', f) is not None
+
+
+def regulate_doc(doc):
+    doc = {k.lower():v for k,v in doc.items() if k}
+    return doc
+
+
 def save_item(col, doc, id_field=None, existing_policy: ExistingRowPolicy = ExistingRowPolicy.Skip):
     if len(doc) == 0:
         raise Exception("Post data cannot be null.")
@@ -81,6 +90,8 @@ def save_item(col, doc, id_field=None, existing_policy: ExistingRowPolicy = Exis
         doc_id = doc.get(id_field)
     else:
         doc_id = doc.get('id')
+
+    doc = regulate_doc(doc)
     
     if doc_id:
         if not isinstance(doc_id, (str, ObjectId)):
