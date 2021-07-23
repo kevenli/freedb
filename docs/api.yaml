@@ -27,7 +27,7 @@ paths:
         400:
           description: db_id or col_id does not exists.
 
-  /databases/{db_name}/cpllections/{dol_name}/fields:
+  /databases/{db_name}/collections/{dol_name}/fields:
     put:
       description: Set collection fields schema
       operationId: PutCollectionFields
