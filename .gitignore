@@ -143,3 +143,5 @@ prod_settings.py
 dev
 examples/ssl/
 static
+
+.gitpod.yml

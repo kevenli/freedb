@@ -15,6 +15,7 @@ RUN apt-get update \
 
 COPY --chown=python:python requirements*.txt ./
 COPY docker/nginx.conf /etc/nginx/conf.d/nginx.conf
+COPY docker/uwsgi.ini /app/uwsgi.ini
 #COPY --chown=python:python bin/ ./bin
 
 #RUN chmod 0755 bin/* && bin/pip3-install
@@ -41,4 +42,5 @@ ENTRYPOINT ["/app/docker/docker-entrypoint.sh"]
 
 EXPOSE 8000
 
-CMD ["gunicorn", "-c", "python:freedb_site.gunicorn", "freedb_site.wsgi"]
+# CMD ["gunicorn", "-c", "python:freedb_site.gunicorn", "freedb_site.wsgi"]
+CMD ["uwsgi", "--ini", "uwsgi.ini"]

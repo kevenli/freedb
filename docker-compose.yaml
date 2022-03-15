@@ -1,11 +1,11 @@
 version: '3.1'
 services:
   web:
-    image: kevenli/freedb:develop
+    image: freedb
     volumes:
       - ./data:/app/data:z
     ports:
-      - 8000:81
+      - 8000:8000
     depends_on:
       - mongo
     links:
